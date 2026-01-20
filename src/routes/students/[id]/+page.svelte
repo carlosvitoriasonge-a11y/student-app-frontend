@@ -110,7 +110,7 @@
 
     <div class="photo-box">
       {#if student.photo}
-      <img src={new URL(`/photos/${student.photo}`, window.location.origin).href} alt="顔写真">
+      <img src={`http://${window.location.hostname}/photos/${student.photo}`} alt="顔写真">
       {:else}
         <div class="no-photo">写真なし</div>
       {/if}
