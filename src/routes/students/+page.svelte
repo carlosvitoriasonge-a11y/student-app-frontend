@@ -24,8 +24,9 @@
   async function loadClasses() {
     if (!browser) return; // ★ SSR防止
 
-    const res = await fetch(`/api/students/search?keyword=${grade}`);
-    const data = await res.json();
+    const res = await fetch(`/api/students`);
+    let data = await res.json();
+    data = data.filter(s => s.grade === grade);
 
     classes = [...new Set(data.map(s => s.class_name).filter(Boolean))];
     className = "";
@@ -39,8 +40,9 @@
 
     loading = true;
 
-    const res = await fetch(`/api/students/search?keyword=${grade}`);
+    const res = await fetch(`/api/students`);
     let data = await res.json();
+    data = data.filter(s => s.grade === grade);
 
     // filtros no frontend
     if (course !== "") data = data.filter(s => s.course === course);
