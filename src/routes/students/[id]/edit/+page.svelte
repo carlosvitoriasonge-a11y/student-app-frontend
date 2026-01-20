@@ -15,7 +15,7 @@
 
   onMount(async () => {
     try {
-      const res = await fetch(`http://localhost:8000/students/${id}`);
+      const res = await fetch(`/api/students/${id}`);
       if (!res.ok) throw new Error("生徒データの取得に失敗しました");
       student = await res.json();
     } catch (e) {
@@ -35,7 +35,7 @@
       formData.append("file", photoFile);
 
       const uploadRes = await fetch(
-        `http://localhost:8000/upload_photo/${id}`,
+        `/api/upload_photo/${id}`,
         { method: "POST", body: formData }
       );
 
@@ -46,7 +46,7 @@
     }
 
     // 生徒データ保存（PUT）
-    const res = await fetch(`http://localhost:8000/students/${id}`, {
+    const res = await fetch(`/api/students/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(student)
@@ -143,7 +143,7 @@
 
     <div class="photo-box">
       {#if student.photo}
-        <img src={"http://localhost:8000/photos/" + student.photo} alt="顔写真">
+        <img src={"/api/photos/" + student.photo} alt="顔写真">
       {:else}
         <div class="no-photo">写真なし</div>
       {/if}

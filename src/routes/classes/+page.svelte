@@ -4,7 +4,7 @@
   let classes = [];
 
   onMount(async () => {
-    const res = await fetch("http://localhost:8000/classes");
+    const res = await fetch("/api/classes");
     classes = await res.json();
   });
 </script>

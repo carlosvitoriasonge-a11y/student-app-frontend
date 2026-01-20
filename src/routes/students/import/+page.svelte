@@ -16,7 +16,7 @@
       formData.append("file", file);
   
       try {
-        const res = await fetch("http://localhost:8000/students/import_csv", {
+        const res = await fetch("/api/students/import_csv", {
           method: "POST",
           body: formData
         });
@@ -39,7 +39,7 @@
 <h1>CSV 一括登録</h1>
 
 <!-- ★ テンプレートダウンロード -->
-<a class="template" href="http://localhost:8000/students/template_csv">
+<a class="template" href="/api/students/template_csv">
   CSV テンプレートをダウンロード
 </a>
 

@@ -26,7 +26,7 @@
 
   onMount(async () => {
     try {
-      const res = await fetch(`http://localhost:8000/students/${id}`,{
+      const res = await fetch(`/api/students/${id}`,{
         cache: "no-store"
       });
       if (!res.ok) throw new Error("生徒データの取得に失敗しました");
@@ -109,7 +109,7 @@
 
     <div class="photo-box">
       {#if student.photo}
-        <img src={"http://localhost:8000/photos/" + student.photo} alt="顔写真">
+      <img src={"http://192.168.1.58/:8000/photos/" + student.photo} alt="顔写真">
       {:else}
         <div class="no-photo">写真なし</div>
       {/if}

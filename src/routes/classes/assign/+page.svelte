@@ -22,7 +22,7 @@
   // 生徒一覧取得
   async function loadStudents() {
     const res = await fetch(
-      `http://localhost:8000/students/filter?grade=${grade}&course=${course}`
+      `/api/students/filter?grade=${grade}&course=${course}`
     );
 
     if (!res.ok) {
@@ -42,7 +42,7 @@
       student_ids: selected
     };
 
-    const res = await fetch("http://localhost:8000/classes/preview", {
+    const res = await fetch("/api/classes/preview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
@@ -67,7 +67,7 @@
       }))
     };
 
-    const res = await fetch("http://localhost:8000/classes/commit", {
+    const res = await fetch("/api/classes/commit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)

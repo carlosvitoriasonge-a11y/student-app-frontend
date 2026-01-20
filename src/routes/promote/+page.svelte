@@ -40,7 +40,7 @@
 
   // ★★★ ここが修正ポイント（末尾 / を追加）★★★
   onMount(async () => {
-    const res = await fetch("http://localhost:8000/students/");
+    const res = await fetch("/api/students/");
     students = await res.json();
   });
 
@@ -122,7 +122,7 @@
 
     loading = true;
 
-    const res = await fetch("http://localhost:8000/students/promote", {
+    const res = await fetch("/api/students/promote", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

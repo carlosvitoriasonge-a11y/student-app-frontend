@@ -12,7 +12,7 @@
 
   onMount(async () => {
     try {
-      const res = await fetch(`http://localhost:8000/students/graduates/${id}`);
+      const res = await fetch(`/api/students/graduates/${id}`);
       if (!res.ok) throw new Error("卒業生データの取得に失敗しました");
 
       graduate = await res.json();
@@ -67,7 +67,7 @@
   <div>
     {#if graduate.photo}
       <img
-        src={`http://localhost:8000/photos/${graduate.photo}`}
+        src={`/api/photos/${graduate.photo}`}
         alt="photo"
         style="width: 200px; border: 1px solid #ccc;"
       />

@@ -33,7 +33,7 @@
       if (course) params.append("course", course);
 
       const res = await fetch(
-        `http://localhost:8000/students/graduates?${params.toString()}`
+        `/api/students/graduates?${params.toString()}`
       );
 
       if (!res.ok) throw new Error("卒業生データの取得に失敗しました");
@@ -84,7 +84,7 @@
     searching = true;
 
     const res = await fetch(
-      `http://localhost:8000/students/graduates/search?keyword=${keyword}`
+      `/api/students/graduates/search?keyword=${keyword}`
     );
     searchResults = await res.json();
 
@@ -98,7 +98,7 @@
 
   async function restoreStudents() {
     try {
-      const res = await fetch("http://localhost:8000/students/restore", {
+      const res = await fetch("/api/students/restore", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ restore_ids: selectedIds })

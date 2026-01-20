@@ -6,7 +6,7 @@
   
     onMount(async () => {
       try {
-        const res = await fetch("http://localhost:8000/students?grade=1");
+        const res = await fetch("/api/students?grade=1");
         students = await res.json();
       } catch (e) {
         console.error("API error:", e);

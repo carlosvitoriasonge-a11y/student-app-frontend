@@ -21,7 +21,7 @@
   // クラス一覧ロード
   // -------------------------
   async function loadClasses() {
-    const res = await fetch(`http://localhost:8000/students/classes/${grade}`);
+    const res = await fetch(`/api/students/classes/${grade}`);
     const data = await res.json();
 
     classes = Array.isArray(data) ? data : [];
@@ -37,7 +37,7 @@
     params.append("course", courseLabel);
 
     const res = await fetch(
-      `http://localhost:8000/students/export/classlist?${params.toString()}`
+      `/api/students/export/classlist?${params.toString()}`
     );
 
     const contentType = res.headers.get("content-type") || "";
@@ -72,7 +72,7 @@
     if (className) params.append("class_name", className);
 
     const res = await fetch(
-      `http://localhost:8000/students/filter?${params.toString()}`
+      `/api/students/filter?${params.toString()}`
     );
 
     const data = await res.json();
@@ -106,7 +106,7 @@
 
     searching = true;
     const res = await fetch(
-      `http://localhost:8000/students/search?keyword=${kw}`
+      `/api/students/search?keyword=${kw}`
     );
     searchResults = await res.json();
     searching = false;
