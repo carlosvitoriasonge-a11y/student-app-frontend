@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte";
+  import { browser } from "$app/environment";
 
   // -------------------------
   // エラーダイアログ
@@ -21,6 +22,8 @@
   // クラス一覧ロード
   // -------------------------
   async function loadClasses() {
+    if (!browser) return; // ★ SSR防止
+
     const res = await fetch(`/api/students/classes/${grade}`);
     const data = await res.json();
 
@@ -29,52 +32,21 @@
   }
 
   // -------------------------
-  // コース別ダウンロード（ダイアログ対応）
-  // -------------------------
-  async function downloadClasslist(courseLabel) {
-    const params = new URLSearchParams();
-    params.append("grade", grade);
-    params.append("course", courseLabel);
-
-    const res = await fetch(
-      `/api/students/export/classlist?${params.toString()}`
-    );
-
-    const contentType = res.headers.get("content-type") || "";
-
-    // JSONエラー（該当者なし）
-    if (contentType.includes("application/json")) {
-      const err = await res.json();
-      errorMessage = err.detail || "ダウンロードできませんでした";
-      showError = true;
-      return;
-    }
-
-    // Excelファイルの場合
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${grade}_${courseLabel}_classes.xlsx`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  // -------------------------
   // 生徒一覧ロード
   // -------------------------
   async function load() {
+    if (!browser) return; // ★ SSR防止
+
     loading = true;
 
     const params = new URLSearchParams();
     params.append("grade", grade);
-    if (course) params.append("course", course);
-    if (className) params.append("class_name", className);
 
-    const res = await fetch(
-      `/api/students/filter?${params.toString()}`
-    );
+    // ★ 修正：空文字を送らない
+    if (course !== "") params.append("course", course);
+    if (className !== "") params.append("class_name", className);
 
+    const res = await fetch(`/api/students/filter?${params.toString()}`);
     const data = await res.json();
 
     if (!Array.isArray(data)) {
@@ -97,6 +69,8 @@
   let searching = false;
 
   async function search() {
+    if (!browser) return; // SSR防止
+
     const kw = keyword.trim();
 
     if (kw.length === 0) {
@@ -105,15 +79,13 @@
     }
 
     searching = true;
-    const res = await fetch(
-      `/api/students/search?keyword=${kw}`
-    );
+    const res = await fetch(`/api/students/search?keyword=${kw}`);
     searchResults = await res.json();
     searching = false;
   }
 
   // -------------------------
-  // 初回ロード
+  // 初回ロード（ブラウザのみ）
   // -------------------------
   onMount(() => {
     loadClasses();
@@ -121,14 +93,14 @@
   });
 
   // -------------------------
-  // 学年変更時
+  // 学年変更時（★ SSR-safe）
   // -------------------------
-  $: loadClasses();
+  $: if (browser && grade !== "") loadClasses();
 
   // -------------------------
-  // フィルター変更時
+  // フィルター変更時（SSR-safe）
   // -------------------------
-  $: if (!showError && keyword.trim().length === 0) {
+  $: if (browser && !showError && keyword.trim().length === 0) {
     grade;
     course;
     className;
@@ -173,7 +145,7 @@
 
 <br /><br />
 
-<!-- コース別ダウンロード（ボタン版） -->
+<!-- コース別ダウンロード -->
 {#if grade}
   <div style="margin: 16px 0;">
     <p>コース別ダウンロード：</p>
