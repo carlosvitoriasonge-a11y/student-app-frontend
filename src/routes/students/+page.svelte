@@ -24,10 +24,10 @@
   async function loadClasses() {
     if (!browser) return; // ★ SSR防止
 
-    const res = await fetch(`/api/students/classes/${grade}`);
+    const res = await fetch(`/api/students/search?keyword=${grade}`);
     const data = await res.json();
 
-    classes = Array.isArray(data) ? data : [];
+    classes = [...new Set(data.map(s => s.class_name).filter(Boolean))];
     className = "";
   }
 
@@ -35,31 +35,23 @@
   // 生徒一覧ロード
   // -------------------------
   async function load() {
-    if (!browser) return; // ★ SSR防止
+    if (!browser) return;
 
     loading = true;
 
-    const params = new URLSearchParams();
-    params.append("grade", grade);
+    const res = await fetch(`/api/students/search?keyword=${grade}`);
+    let data = await res.json();
 
-    // ★ 修正：空文字を送らない
-    if (course !== "") params.append("course", course);
-    if (className !== "") params.append("class_name", className);
-
-    const res = await fetch(`/api/students/filter?${params.toString()}`);
-    const data = await res.json();
-
-    if (!Array.isArray(data)) {
-      errorMessage = data.detail || "データ取得に失敗しました";
-      showError = true;
-      students = [];
-      loading = false;
-      return;
-    }
+    // filtros no frontend
+    if (course !== "") data = data.filter(s => s.course === course);
+    if (className !== "") data = data.filter(s => s.class_name === className);
 
     students = data;
     loading = false;
   }
+
+
+
 
   // -------------------------
   // 検索
