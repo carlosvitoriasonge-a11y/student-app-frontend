@@ -112,6 +112,31 @@
     if (!filterFemale && s.gender === "女") return false;
     return true;
   });
+
+
+  async function downloadClasslist(course) {
+    try {
+      const url = `/api/students/classlist/export?grade=${grade}&course=${course}`;
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        throw new Error("ダウンロードに失敗しました");
+      }
+
+      const blob = await res.blob();
+      const downloadUrl = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = `${grade}_${course}_classlist.xlsx`;
+      a.click();
+
+      URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      errorMessage = err.message;
+      showError = true;
+    }
+  }
 </script>
 
 <h1>生徒一覧</h1>
