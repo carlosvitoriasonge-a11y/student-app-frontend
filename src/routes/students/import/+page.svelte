@@ -16,7 +16,7 @@
       formData.append("file", file);
   
       try {
-        const res = await fetch("/api/students/import_csv", {
+        const res = await fetch("/api/import_csv", {
           method: "POST",
           body: formData
         });
