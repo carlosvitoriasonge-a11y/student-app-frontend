@@ -178,9 +178,9 @@
       <h3>コース変更</h3>
 
       <select bind:value={newCourse}>
-        <option value="z">全日コース</option>
-        <option value="w">水曜コース</option>
-        <option value="s">集中コース</option>
+        <option value="全">全日コース</option>
+        <option value="水">水曜コース</option>
+        <option value="集">集中コース</option>
       </select>
 
       {#if newCourse === "z"}
