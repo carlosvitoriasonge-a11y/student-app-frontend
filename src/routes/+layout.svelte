@@ -14,9 +14,10 @@
       // ★ 修正済み：/students/promote → /promote
       { name: "昇級処理", page: "/promote" },
 
-      { name: "成績入力", page: "/students/grades" },
+      { name: "成績入力", page: "/grades" },
       { name: "クラス分け処理", page: "/classes/assign" },
-      { name: "卒業生一覧", page: "/students/graduates" }
+      { name: "卒業生一覧", page: "/students/graduates" },
+      { name: "転出者一覧", page: "/exit" }
     ];
 </script>
 

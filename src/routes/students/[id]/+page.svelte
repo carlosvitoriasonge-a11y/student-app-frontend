@@ -21,6 +21,101 @@
   let adminPassword = "";
   let passwordError = "";
 
+  // ====== JOSEKI MODAL ======
+  let showJoseki = false;
+  let josekiDate = "";
+  let josekiPassword = "";
+
+  async function submitJoseki() {
+    if (!josekiDate || !josekiPassword) {
+      alert("日付とパスワードを入力してください");
+      return;
+    }
+
+    const res = await fetch("/api/students/joseki", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        student_id: student.id,
+        date: josekiDate,
+        password: josekiPassword
+      })
+    });
+
+    if (!res.ok) {
+      alert("除籍に失敗しました");
+      return;
+    }
+
+    alert("除籍しました");
+    window.location.href = "/students";
+  }
+
+  // ====== TENGAKU MODAL ======
+  let showTengaku = false;
+  let tengakuDate = "";
+  let tengakuSchool = "";
+  let tengakuPassword = "";
+
+  async function submitTengaku() {
+    if (!tengakuDate || !tengakuSchool || !tengakuPassword) {
+      alert("日付・転学先・パスワードを入力してください");
+      return;
+    }
+
+    const res = await fetch("/api/students/tengaku", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        student_id: student.id,
+        date: tengakuDate,
+        destination_school: tengakuSchool,
+        password: tengakuPassword
+      })
+    });
+
+    if (!res.ok) {
+      alert("転学に失敗しました");
+      return;
+    }
+
+    alert("転学処理が完了しました");
+    window.location.href = "/students";
+  }
+
+
+  // ====== TAIGAKU MODAL ======
+  let showTaigaku = false;
+  let taigakuDate = "";
+  let taigakuPassword = "";
+
+  async function submitTaigaku() {
+    if (!taigakuDate || !taigakuPassword) {
+      alert("日付とパスワードを入力してください");
+      return;
+    }
+
+    const res = await fetch("/api/students/taigaku", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        student_id: student.id,
+        date: taigakuDate,
+        password: taigakuPassword
+      })
+    });
+
+    if (!res.ok) {
+      alert("退学に失敗しました");
+      return;
+    }
+
+    alert("退学処理が完了しました");
+    window.location.href = "/students";
+  }
+
+
+
   function openCourseModal() {
     newCourse = student.course;
     changeError = "";
@@ -75,7 +170,6 @@
     adminPassword = "";
   }
 
-  // ====== 和暦変換 ======
   function toWareki(dateStr) {
     if (!dateStr) return "";
     const d = new Date(dateStr);
@@ -91,9 +185,7 @@
 
   onMount(async () => {
     try {
-      const res = await fetch(`/api/students/${id}`, {
-        cache: "no-store"
-      });
+      const res = await fetch(`/api/students/${id}`, { cache: "no-store" });
       if (!res.ok) throw new Error("生徒データの取得に失敗しました");
       student = await res.json();
     } catch (e) {
@@ -112,7 +204,6 @@
 {:else if student}
 
 <div class="container">
-
   <div class="left">
     <table class="info-table">
       <tbody>
@@ -141,7 +232,6 @@
   </div>
 
   <div class="right">
-
     <div class="photo-box">
       {#if student.photo}
         <img src={`http://${window.location.hostname}/photos/${student.photo}`} alt="顔写真">
@@ -161,7 +251,15 @@
     </table>
 
     <button on:click={openCourseModal}>コース変更</button>
-
+    <button class="danger" on:click={() => showJoseki = true}>除籍</button>
+    <button class="danger" on:click={() => showTengaku = true}>
+      転学
+    </button>
+    <button class="danger" on:click={() => showTaigaku = true}>
+      退学
+    </button>
+    
+    
   </div>
 </div>
 
@@ -171,52 +269,118 @@
 
 {/if}
 
-<!-- COURSE MODAL -->
-{#if showCourseModal}
-  <div class="modal-backdrop">
-    <div class="modal">
-      <h3>コース変更</h3>
+{#if showJoseki}
+<div class="modal-backdrop">
+  <div class="modal">
+    <h3>除籍確認</h3>
 
-      <select bind:value={newCourse}>
-        <option value="全">全日コース</option>
-        <option value="水">水曜コース</option>
-        <option value="集">集中コース</option>
-      </select>
+    <div class="form-group">
+      <label>除籍日</label>
+      <input type="date" bind:value={josekiDate} />
+    </div>
 
-      {#if newCourse === "z"}
-        <p>クラスと出席番号はリセットされます。</p>
-      {:else}
-        <p>出席番号は自動で末尾に追加されます。</p>
-      {/if}
+    <div class="form-group">
+      <label>管理者パスワード</label>
+      <input type="password" bind:value={josekiPassword} />
+    </div>
 
-      {#if changeError}
-        <p style="color:red">{changeError}</p>
-      {/if}
-
-      <button on:click={() => showCourseModal = false}>キャンセル</button>
-      <button on:click={() => showPasswordModal = true} disabled={changing}>
-        変更
-      </button>
+    <div class="actions">
+      <button on:click={submitJoseki}>確定</button>
+      <button on:click={() => showJoseki = false}>キャンセル</button>
     </div>
   </div>
+</div>
 {/if}
 
-<!-- PASSWORD MODAL -->
-{#if showPasswordModal}
-  <div class="modal-backdrop">
-    <div class="modal">
-      <h3>管理者パスワード</h3>
+{#if showTengaku}
+<div class="modal-backdrop">
+  <div class="modal">
+    <h3>転学確認</h3>
 
-      <input type="password" bind:value={adminPassword} />
+    <div class="form-group">
+      <label>転学日</label>
+      <input type="date" bind:value={tengakuDate} />
+    </div>
 
-      {#if passwordError}
-        <p style="color:red">{passwordError}</p>
-      {/if}
+    <div class="form-group">
+      <label>転学先学校名</label>
+      <input type="text" bind:value={tengakuSchool} />
+    </div>
 
-      <button on:click={() => showPasswordModal = false}>キャンセル</button>
-      <button on:click={confirmPasswordAndChange}>実行</button>
+    <div class="form-group">
+      <label>管理者パスワード</label>
+      <input type="password" bind:value={tengakuPassword} />
+    </div>
+
+    <div class="actions">
+      <button on:click={submitTengaku}>確定</button>
+      <button on:click={() => showTengaku = false}>キャンセル</button>
     </div>
   </div>
+</div>
+{/if}
+
+{#if showTaigaku}
+<div class="modal-backdrop">
+  <div class="modal">
+    <h3>退学確認</h3>
+
+    <div class="form-group">
+      <label>退学日</label>
+      <input type="date" bind:value={taigakuDate} />
+    </div>
+
+    <div class="form-group">
+      <label>管理者パスワード</label>
+      <input type="password" bind:value={taigakuPassword} />
+    </div>
+
+    <div class="actions">
+      <button on:click={submitTaigaku}>確定</button>
+      <button on:click={() => showTaigaku = false}>キャンセル</button>
+    </div>
+  </div>
+</div>
+{/if}
+
+
+
+{#if showCourseModal}
+<div class="modal-backdrop">
+  <div class="modal">
+    <h3>コース変更</h3>
+
+    <select bind:value={newCourse}>
+      <option value="全">全日コース</option>
+      <option value="水">水曜コース</option>
+      <option value="集">集中コース</option>
+    </select>
+
+    {#if changeError}
+      <p style="color:red">{changeError}</p>
+    {/if}
+
+    <button on:click={() => showCourseModal = false}>キャンセル</button>
+    <button on:click={() => showPasswordModal = true} disabled={changing}>変更</button>
+  </div>
+</div>
+{/if}
+
+{#if showPasswordModal}
+<div class="modal-backdrop">
+  <div class="modal">
+    <h3>管理者パスワード</h3>
+
+    <input type="password" bind:value={adminPassword} />
+
+    {#if passwordError}
+      <p style="color:red">{passwordError}</p>
+    {/if}
+
+    <button on:click={() => showPasswordModal = false}>キャンセル</button>
+    <button on:click={confirmPasswordAndChange}>実行</button>
+  </div>
+</div>
 {/if}
 
 <style>
@@ -273,5 +437,28 @@
     width: 300px;
   }
 
+  .danger {
+    background: #c0392b;
+    color: white;
+  }
+
   .edit-btn { margin-top: 20px; }
+
+  .form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+
+.form-group label {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
 </style>
