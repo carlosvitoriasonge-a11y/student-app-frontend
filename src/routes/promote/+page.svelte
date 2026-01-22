@@ -3,11 +3,10 @@
 
   let students = [];
 
-  // ウィザードステップ
   // 0: コース選択
-  // 1: 3年生（卒業）
-  // 2: 2年生（昇級）
-  // 3: 1年生（昇級）
+  // 1: 3年生
+  // 2: 2年生
+  // 3: 1年生
   // 4: 完了
   let step = 0;
 
@@ -20,16 +19,15 @@
 
   let loading = false;
 
-  // 累計結果
   let totalPromoted = 0;
   let totalStayed = 0;
   let totalGraduated = 0;
 
   const courseLabels = {
-    full: "全日コース",
-    wednesday: "本科（水曜）コース",
-    intensive: "本科（集中）コース",
-    "": "全コース"
+    "": "全コース",
+    "全": "全日",
+    "水": "本科（水曜）",
+    "集": "本科（集中）"
   };
 
   const stepTitles = {
@@ -38,13 +36,11 @@
     3: "1年生の昇級処理"
   };
 
-  // ★★★ ここが修正ポイント（末尾 / を追加）★★★
   onMount(async () => {
     const res = await fetch("/api/students/");
     students = await res.json();
   });
 
-  // 現在ステップに対応する学年
   function gradeForStep(step) {
     if (step === 1) return "3";
     if (step === 2) return "2";
@@ -52,16 +48,15 @@
     return "";
   }
 
-  // 現在ステップに応じた一覧を更新
   $: if (step >= 1 && step <= 3) {
     const g = gradeForStep(step);
     filteredStudents =
-      g && course !== undefined
+      g
         ? students
             .filter(s => s.grade === g)
             .filter(s => !course || s.course === course)
         : [];
-    // 選択は表示中の生徒だけに限定
+
     promote_ids = promote_ids.filter(id =>
       filteredStudents.some(s => s.id === id)
     );
@@ -70,7 +65,6 @@
     promote_ids = [];
   }
 
-  // テーブル右端の位置
   $: if (tableRef) {
     const rect = tableRef.getBoundingClientRect();
     buttonX = rect.right;
@@ -86,12 +80,9 @@
 
   function startWizard() {
     if (!course) {
-      const ok = confirm(
-        "コースが未選択です。\n全コースを対象にして昇級処理を開始しますか？"
-      );
-      if (!ok) return;
+      if (!confirm("コース未選択です。\n全コース対象で開始しますか？")) return;
     }
-    step = 1; // 3年生から開始
+    step = 1;
   }
 
   async function runPromoteForCurrentStep() {
@@ -102,23 +93,22 @@
       s => !promote_ids.includes(s.id)
     );
 
-    // 確認ダイアログ（3年は卒業、それ以外は昇級）
-    let message = "以下の内容で処理を行います。\n\n";
-    message += `対象学年：${grade} 年生\n`;
-    message += `コース：${courseLabels[course]}\n\n`;
+    let msg = "以下の内容で処理を行います。\n\n";
+    msg += `対象学年：${grade} 年生\n`;
+    msg += `コース：${courseLabels[course]}\n\n`;
 
     if (grade === "3") {
-      message += `卒業：${promote_ids.length} 名\n`;
-      message += `留年：${unchecked.length} 名\n\n`;
+      msg += `卒業：${promote_ids.length} 名\n`;
+      msg += `留年：${unchecked.length} 名\n\n`;
     } else {
-      message += `進級：${promote_ids.length} 名\n`;
-      message += `留年：${unchecked.length} 名\n\n`;
+      msg += `進級：${promote_ids.length} 名\n`;
+      msg += `留年：${unchecked.length} 名\n\n`;
     }
 
-    message += "よろしいですか？";
+    if (!confirm(msg)) return;
 
-    const ok = confirm(message);
-    if (!ok) return;
+    const password = prompt("管理者パスワードを入力してください");
+    if (!password) return;
 
     loading = true;
 
@@ -127,7 +117,8 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         grade,
-        promote_ids
+        promote_ids,
+        password
       })
     });
 
@@ -139,12 +130,11 @@
 
     loading = false;
 
-    // 次のステップへ
     if (step < 3) {
       step += 1;
       promote_ids = [];
     } else {
-      step = 4; // 完了
+      step = 4;
     }
   }
 </script>
@@ -152,10 +142,9 @@
 <h1>昇級処理</h1>
 
 {#if step === 0}
-  <!-- STEP 0: コース選択 -->
-  <div style="margin-bottom: 16px;">
+  <div style="margin-bottom:16px;">
     <label>
-      コースを選択：
+      コース：
       <select bind:value={course}>
         <option value="">全コース</option>
         <option value="全">全日</option>
@@ -171,26 +160,24 @@
 {/if}
 
 {#if step >= 1 && step <= 3}
-  <!-- STEP 1〜3: 各学年ごとの処理 -->
   <h2>{stepTitles[step]}（{courseLabels[course]}）</h2>
 
   {#if filteredStudents.length === 0}
-    <p>対象となる生徒がいません。</p>
-    <button on:click={() => { step = step + 1; promote_ids = []; }}>
-      {step < 3 ? '次へ' : '昇級処理を完了する'}
+    <p>対象生徒がいません。</p>
+    <button on:click={() => { step += 1; promote_ids = []; }}>
+      {step < 3 ? "次へ" : "完了"}
     </button>
   {:else}
-    <table bind:this={tableRef} border="1" cellpadding="6" style="margin-bottom: 12px;">
+    <table bind:this={tableRef} border="1" cellpadding="6">
       <thead>
         <tr>
           <th>名前</th>
           <th>ID</th>
           <th>学年</th>
-          <th>処理内容</th>
-          <th>チェック</th>
+          <th>処理</th>
+          <th>選択</th>
         </tr>
       </thead>
-
       <tbody>
         {#each filteredStudents as s}
           <tr>
@@ -206,39 +193,21 @@
       </tbody>
     </table>
 
-    <div
-      style="
-        position: absolute;
-        left: {buttonX}px;
-        transform: translateX(-100%);
-        margin-top: 10px;
-        display: flex;
-        gap: 8px;
-      "
-    >
-      <button on:click={clearAll} disabled={loading || filteredStudents.length === 0}>
-        全て解除
-      </button>
-
-      <button on:click={selectAll} disabled={loading || filteredStudents.length === 0}>
-        全てチェック
-      </button>
-
-      <button on:click={runPromoteForCurrentStep} disabled={loading || filteredStudents.length === 0}>
-        {#if loading}
-          処理中...
-        {:else}
-          {step === 1 ? '卒業処理を実行' : '昇級処理を実行'}
-        {/if}
+    <div style="margin-top:10px;">
+      <button on:click={clearAll} disabled={loading}>全解除</button>
+      <button on:click={selectAll} disabled={loading}>全選択</button>
+      <button on:click={runPromoteForCurrentStep} disabled={loading}>
+        {loading ? "処理中..." : step === 1 ? "卒業処理実行" : "昇級処理実行"}
       </button>
     </div>
   {/if}
 {/if}
 
 {#if step === 4}
-  <!-- STEP 4: 完了画面 -->
-  <h2>昇級処理が完了しました</h2>
-  <p style="font-weight: bold; color: green;">
-    卒業: {totalGraduated} 名 / 進級: {totalPromoted} 名 / 留年: {totalStayed} 名
+  <h2>昇級処理完了</h2>
+  <p>
+    卒業：{totalGraduated} 名 /
+    進級：{totalPromoted} 名 /
+    留年：{totalStayed} 名
   </p>
 {/if}

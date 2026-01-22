@@ -37,7 +37,7 @@
   async function doPreview() {
     const body = {
       grade,
-      course: toJpCourse(course),   // ★ 日本語に変換
+      course: toJpCourse(course),
       class_name: `${currentClassIndex}組`,
       student_ids: selected
     };
@@ -57,14 +57,18 @@
     preview = await res.json();
   }
 
-  // 登録
+  // 登録（★ パスワード追加）
   async function commitClass() {
+    const password = prompt("管理者パスワードを入力してください");
+    if (!password) return;
+
     const body = {
       class_name: `${currentClassIndex}組`,
       students: preview.students.map((s) => ({
         id: s.id,
         attend_no: s.attend_no
-      }))
+      })),
+      password
     };
 
     const res = await fetch("/api/classes/commit", {

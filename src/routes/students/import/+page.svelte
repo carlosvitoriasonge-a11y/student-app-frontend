@@ -49,7 +49,11 @@
       <input
         type="file"
         accept=".csv"
-        on:change={(e) => (file = e.target.files?.[0] || null)}
+        on:change={(e) => {
+          const input = e.target as HTMLInputElement;
+          file = input.files?.[0] || null;
+        }}
+        
       />
     </label>
 
