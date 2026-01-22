@@ -180,9 +180,9 @@
       コース：
       <select bind:value={course}>
         <option value="">全コース</option>
-        <option value="full">全日</option>
-        <option value="wednesday">本科（水曜）</option>
-        <option value="intensive">本科（集中）</option>
+        <option value="全">全日</option>
+        <option value="水">本科（水曜）</option>
+        <option value="集">本科（集中）</option>
       </select>
     </label>
   </div>
@@ -227,7 +227,7 @@
         <tr>
           <td><input type="checkbox" bind:group={selectedIds} value={g.id} /></td>
           <td><a href={"/students/graduates/" + g.id}>{g.name}</a></td>
-          <td>{g.gender === "male" ? "男" : "女"}</td>
+          <td>{g.gender === "男" ? "男" : "女"}</td>
           <td>{g.id}</td>
 
           <!-- ★ 修正：卒業年度 -->
