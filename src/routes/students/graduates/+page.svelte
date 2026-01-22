@@ -68,8 +68,8 @@
           if (selectedYear && Number(g["卒業年度"]) !== Number(selectedYear)) {
             return false;
           }
-          if (!filterMale && g.gender === "male") return false;
-          if (!filterFemale && g.gender === "female") return false;
+          if (!filterMale && g.gender === "男") return false;
+          if (!filterFemale && g.gender === "女") return false;
           if (course && g.course !== course) return false;
           return true;
         });
