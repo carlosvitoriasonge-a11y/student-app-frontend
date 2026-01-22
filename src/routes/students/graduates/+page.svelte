@@ -153,7 +153,7 @@
         <tr>
           <td><input type="checkbox" bind:group={selectedIds} value={g.id} /></td>
           <td><a href={"/students/graduates/" + g.id}>{g.name}</a></td>
-          <td>{g.gender === "male" ? "男" : "女"}</td>
+          <td>{g.gender === "男" ? "男" : "女"}</td>
           <td>{g.id}</td>
 
           <!-- ★ 修正：卒業年度 -->
