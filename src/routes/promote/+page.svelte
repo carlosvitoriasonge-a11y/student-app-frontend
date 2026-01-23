@@ -1,5 +1,9 @@
+import { apiFetch } from "$lib/api";
+
 <script>
   import { onMount } from "svelte";
+  
+
 
   let students = [];
 
@@ -37,7 +41,7 @@
   };
 
   onMount(async () => {
-    const res = await fetch("/api/students/");
+    const res = await apiFetch("/api/students/");
     students = await res.json();
   });
 
@@ -112,7 +116,7 @@
 
     loading = true;
 
-    const res = await fetch("/api/students/promote", {
+    const res = await apiFetch("/api/students/promote", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

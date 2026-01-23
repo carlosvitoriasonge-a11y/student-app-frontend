@@ -1,5 +1,7 @@
 <script>
   import { onMount } from "svelte";
+  import { apiFetch } from "$lib/api";
+
 
   let course = "";
   let grade = "";
@@ -21,7 +23,7 @@
 
   // 生徒一覧取得
   async function loadStudents() {
-    const res = await fetch(
+    const res = await apiFetch(
       `/api/students/filter?grade=${grade}&course=${course}`
     );
 
@@ -42,7 +44,7 @@
       student_ids: selected
     };
 
-    const res = await fetch("/api/classes/preview", {
+    const res = await apiFetch("/api/classes/preview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
@@ -71,7 +73,7 @@
       password
     };
 
-    const res = await fetch("/api/classes/commit", {
+    const res = await apiFetch("/api/classes/commit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)

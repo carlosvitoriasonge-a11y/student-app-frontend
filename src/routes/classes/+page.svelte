@@ -1,10 +1,12 @@
 <script>
   import { onMount } from "svelte";
+  import { apiFetch } from "$lib/api";
+
 
   let classes = [];
 
   onMount(async () => {
-    const res = await fetch("/api/classes");
+    const res = await apiFetch("/api/classes");
     classes = await res.json();
   });
 </script>

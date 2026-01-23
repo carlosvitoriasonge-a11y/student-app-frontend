@@ -1,3 +1,4 @@
+
 <script>
 
     function formatJapaneseDate(dateStr) {
@@ -12,6 +13,10 @@
 
     export const ssr = false;
     import { onMount } from "svelte";
+    import { apiFetch } from "$lib/api";
+
+   
+
   
     let data = {};
     let years = [];
@@ -54,7 +59,7 @@
     }
   
     onMount(async () => {
-      const res = await fetch("/api/students/exit_list");
+      const res = await apiFetch("/api/students/exit_list");
       data = await res.json();
 
       console.log("EXIT LIST DATA:", data);

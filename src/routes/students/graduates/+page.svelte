@@ -1,6 +1,8 @@
 <script>
   export const ssr = false;
   import { onMount } from "svelte";
+  import { apiFetch } from "$lib/api";
+
 
   let graduates = [];
   let years = [];
@@ -36,7 +38,7 @@
       const params = new URLSearchParams();
       if (course) params.append("course", course);
 
-      const res = await fetch(
+      const res = await apiFetch(
         `/api/students/graduates?${params.toString()}`
       );
 
@@ -83,7 +85,7 @@
 
     searching = true;
 
-    const res = await fetch(
+    const res = await apiFetch(
       `/api/students/graduates/search?keyword=${keyword}`
     );
     searchResults = await res.json();
@@ -103,7 +105,7 @@
     }
 
     try {
-      const res = await fetch("/api/students/restore", {
+      const res = await apiFetch("/api/students/restore", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ restore_ids: selectedIds })

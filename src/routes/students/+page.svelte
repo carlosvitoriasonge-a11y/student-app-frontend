@@ -1,6 +1,9 @@
 <script>
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
+  import { apiFetch } from "$lib/api";
+
+
 
   // -------------------------
   // エラーダイアログ
@@ -24,7 +27,7 @@
   async function loadClasses() {
     if (!browser) return; // ★ SSR防止
 
-    const res = await fetch(`/api/students`);
+    const res = await apiFetch(`/api/students`);
     let data = await res.json();
     data = data.filter(s => s.grade === grade);
 
@@ -40,7 +43,7 @@
 
     loading = true;
 
-    const res = await fetch(`/api/students`);
+    const res = await apiFetch(`/api/students`);
     let data = await res.json();
     data = data.filter(s => s.grade === grade);
 
@@ -73,7 +76,7 @@
     }
 
     searching = true;
-    const res = await fetch(`/api/students/search?keyword=${kw}`);
+    const res = await apiFetch(`/api/students/search?keyword=${kw}`);
     searchResults = await res.json();
     searching = false;
   }
@@ -117,7 +120,7 @@
   async function downloadClasslist(course) {
     try {
       const url = `/api/students/classlist/export?grade=${grade}&course=${course}`;
-      const res = await fetch(url);
+      const res = await apiFetch(url);
 
       if (!res.ok) {
         throw new Error("ダウンロードに失敗しました");

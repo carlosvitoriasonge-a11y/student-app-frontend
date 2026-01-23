@@ -1,12 +1,14 @@
 <script>
     import { onMount } from "svelte";
+    import { apiFetch } from "$lib/api";
+
   
     let students = [];
     let loading = true;
   
     onMount(async () => {
       try {
-        const res = await fetch("/api/students?grade=1");
+        const res = await apiFetch("/api/students?grade=1");
         students = await res.json();
       } catch (e) {
         console.error("API error:", e);

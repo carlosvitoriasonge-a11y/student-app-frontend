@@ -2,6 +2,8 @@
   export const ssr = false;
   import { onMount } from "svelte";
   import { page } from "$app/stores";
+  import { apiFetch } from "$lib/api";
+
 
   let student = null;
   let loading = true;
@@ -32,7 +34,7 @@
       return;
     }
 
-    const res = await fetch("/api/students/joseki", {
+    const res = await apiFetch("/api/students/joseki", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -63,7 +65,7 @@
       return;
     }
 
-    const res = await fetch("/api/students/tengaku", {
+    const res = await apiFetch("/api/students/tengaku", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -95,7 +97,7 @@
       return;
     }
 
-    const res = await fetch("/api/students/taigaku", {
+    const res = await apiFetch("/api/students/taigaku", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -132,7 +134,7 @@
     changeError = "";
 
     try {
-      const res = await fetch("/api/students/change_course", {
+      const res = await apiFetch("/api/students/change_course", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -185,7 +187,7 @@
 
   onMount(async () => {
     try {
-      const res = await fetch(`/api/students/${id}`, { cache: "no-store" });
+      const res = await apiFetch(`/api/students/${id}`, { cache: "no-store" });
       if (!res.ok) throw new Error("生徒データの取得に失敗しました");
       student = await res.json();
     } catch (e) {

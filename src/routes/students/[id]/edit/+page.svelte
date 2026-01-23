@@ -2,6 +2,8 @@
   export const ssr = false;
   import { onMount } from "svelte";
   import { page } from "$app/stores";
+  import { apiFetch } from "$lib/api";
+
 
   let student = null;
   let loading = true;
@@ -15,7 +17,7 @@
 
   onMount(async () => {
     try {
-      const res = await fetch(`/api/students/${id}`);
+      const res = await apiFetch(`/api/students/${id}`);
       if (!res.ok) throw new Error("生徒データの取得に失敗しました");
       student = await res.json();
     } catch (e) {
@@ -34,7 +36,7 @@
       const formData = new FormData();
       formData.append("file", photoFile);
 
-      const uploadRes = await fetch(
+      const uploadRes = await apiFetch(
         `/api/upload_photo/${id}`,
         { method: "POST", body: formData }
       );
@@ -46,7 +48,7 @@
     }
 
     // 生徒データ保存（PUT）
-    const res = await fetch(`/api/students/${id}`, {
+    const res = await apiFetch(`/api/students/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(student)

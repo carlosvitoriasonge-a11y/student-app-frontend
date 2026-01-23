@@ -1,4 +1,6 @@
 <script>
+  import { apiFetch } from "$lib/api";
+
   // 基本項目
   let name = "";
   let kana = "";
@@ -66,7 +68,7 @@
     };
 
     try {
-      const res = await fetch("/api/students/", {
+      const res = await apiFetch("/api/students/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)

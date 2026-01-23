@@ -2,6 +2,8 @@
   export const ssr = false;
   import { onMount } from "svelte";
   import { page } from "$app/stores";
+  import { apiFetch } from "$lib/api";
+
 
   let graduate = null;
   let loading = true;
@@ -12,7 +14,7 @@
 
   onMount(async () => {
     try {
-      const res = await fetch(`/api/students/graduates/${id}`);
+      const res = await apiFetch(`/api/students/graduates/${id}`);
       if (!res.ok) throw new Error("卒業生データの取得に失敗しました");
 
       graduate = await res.json();
