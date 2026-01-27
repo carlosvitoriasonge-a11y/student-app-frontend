@@ -6,17 +6,19 @@
 
     onMount(async () => {
         try {
-            const res = await apiFetch("/api/system/status");
-            status = await res.json();
+            status = await apiFetch("/api/system/status");
         } catch (e) {
             console.error("Erro ao carregar status do servidor", e);
         }
     });
 
     function gb(bytes) {
-        return (bytes / 1_000_000_000).toFixed(1);
+        const n = Number(bytes);
+        if (isNaN(n)) return "0.0";
+        return (n / 1_000_000_000).toFixed(1);
     }
 </script>
+
 
 <style>
     .status-box {

@@ -1,9 +1,6 @@
-import { apiFetch } from "$lib/api";
-
 <script>
   import { onMount } from "svelte";
-  
-
+  import { apiFetch } from "$lib/api";
 
   let students = [];
 
@@ -40,9 +37,16 @@ import { apiFetch } from "$lib/api";
     3: "1年生の昇級処理"
   };
 
+  // -------------------------------
+  // 生徒一覧取得
+  // -------------------------------
   onMount(async () => {
-    const res = await apiFetch("/api/students/");
-    students = await res.json();
+    try {
+      students = await apiFetch("/api/students/");
+    } catch (e) {
+      console.error("生徒一覧取得エラー:", e);
+      students = [];
+    }
   });
 
   function gradeForStep(step) {
@@ -52,6 +56,9 @@ import { apiFetch } from "$lib/api";
     return "";
   }
 
+  // -------------------------------
+  // フィルタリング
+  // -------------------------------
   $: if (step >= 1 && step <= 3) {
     const g = gradeForStep(step);
     filteredStudents =
@@ -89,6 +96,9 @@ import { apiFetch } from "$lib/api";
     step = 1;
   }
 
+  // -------------------------------
+  // 昇級・卒業処理
+  // -------------------------------
   async function runPromoteForCurrentStep() {
     const grade = gradeForStep(step);
     if (!grade) return;
@@ -116,21 +126,25 @@ import { apiFetch } from "$lib/api";
 
     loading = true;
 
-    const res = await apiFetch("/api/students/promote", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        grade,
-        promote_ids,
-        password
-      })
-    });
+    try {
+      const data = await apiFetch("/api/students/promote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          grade,
+          promote_ids,
+          password
+        })
+      });
 
-    const data = await res.json();
+      totalPromoted += data.promoted || 0;
+      totalStayed += data.stayed || 0;
+      totalGraduated += data.graduated || 0;
 
-    totalPromoted += data.promoted || 0;
-    totalStayed += data.stayed || 0;
-    totalGraduated += data.graduated || 0;
+    } catch (e) {
+      console.error("昇級処理エラー:", e);
+      alert("処理に失敗しました");
+    }
 
     loading = false;
 

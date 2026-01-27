@@ -68,23 +68,14 @@
     };
 
     try {
-      const res = await apiFetch("/api/students/", {
+      const data = await apiFetch("/api/students/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        console.error("Error:", err);
-        message = "登録に失敗しました";
-        return;
-      }
-
-      const data = await res.json();
+      // data já é JSON
       message = `登録しました（ID: ${data.id}）`;
-
-      // ★★★ 登録成功後の処理（ここが重要） ★★★
 
       // 入力欄リセット
       name = "";
@@ -115,12 +106,11 @@
       note2 = "";
       commute = "";
 
-      // ダイアログ表示
       alert(`登録しました（ID: ${data.id}）`);
 
     } catch (e) {
       console.error(e);
-      message = "通信エラーが発生しました";
+      message = "登録に失敗しました";
     } finally {
       submitting = false;
     }

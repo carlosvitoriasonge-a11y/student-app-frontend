@@ -1,7 +1,5 @@
 <script>
-  import { onMount } from "svelte";
   import { apiFetch } from "$lib/api";
-
 
   let course = "";
   let grade = "";
@@ -13,7 +11,6 @@
   let preview = null;
   let currentClassIndex = 1;
 
-  // ★ 英語 → 日本語コース変換
   function toJpCourse(c) {
     if (c === "full") return "全";
     if (c === "wednesday") return "水";
@@ -23,16 +20,14 @@
 
   // 生徒一覧取得
   async function loadStudents() {
-    const res = await apiFetch(
-      `/api/students/filter?grade=${grade}&course=${course}`
-    );
-
-    if (!res.ok) {
+    try {
+      students = await apiFetch(
+        `/api/students/filter?grade=${grade}&course=${course}`
+      );
+    } catch (e) {
+      console.error(e);
       alert("生徒一覧の取得に失敗しました");
-      return;
     }
-
-    students = await res.json();
   }
 
   // プレビュー
@@ -44,22 +39,19 @@
       student_ids: selected
     };
 
-    const res = await apiFetch("/api/classes/preview", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      alert(err.detail || "プレビューに失敗しました");
-      return;
+    try {
+      preview = await apiFetch("/api/classes/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+    } catch (e) {
+      console.error(e);
+      alert("プレビューに失敗しました");
     }
-
-    preview = await res.json();
   }
 
-  // 登録（★ パスワード追加）
+  // 登録
   async function commitClass() {
     const password = prompt("管理者パスワードを入力してください");
     if (!password) return;
@@ -73,25 +65,25 @@
       password
     };
 
-    const res = await apiFetch("/api/classes/commit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
+    try {
+      await apiFetch("/api/classes/commit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
 
-    if (!res.ok) {
-      const err = await res.json();
-      alert(err.detail || "登録に失敗しました");
-      return;
+      // 割り当て済みの生徒を一覧から除外
+      students = students.filter((s) => !selected.includes(s.id));
+
+      // 次のクラスへ
+      currentClassIndex++;
+      selected = [];
+      preview = null;
+
+    } catch (e) {
+      console.error(e);
+      alert("登録に失敗しました");
     }
-
-    // 割り当て済みの生徒を一覧から除外
-    students = students.filter((s) => !selected.includes(s.id));
-
-    // 次のクラスへ
-    currentClassIndex++;
-    selected = [];
-    preview = null;
   }
 </script>
 

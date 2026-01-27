@@ -3,8 +3,6 @@
   import { browser } from "$app/environment";
   import { apiFetch } from "$lib/api";
 
-
-
   // -------------------------
   // エラーダイアログ
   // -------------------------
@@ -25,38 +23,45 @@
   // クラス一覧ロード
   // -------------------------
   async function loadClasses() {
-    if (!browser) return; // ★ SSR防止
+    if (!browser) return;
 
-    const res = await apiFetch(`/api/students`);
-    let data = await res.json();
-    data = data.filter(s => s.grade === grade);
+    try {
+      let data = await apiFetch(`/api/students`);
+      data = data.filter(s => s.grade === grade);
 
-    classes = [...new Set(data.map(s => s.class_name).filter(Boolean))];
-    className = "";
+      classes = [...new Set(data.map(s => s.class_name).filter(Boolean))];
+      className = "";
+    } catch (e) {
+      console.error(e);
+      errorMessage = "クラス一覧の取得に失敗しました";
+      showError = true;
+    }
   }
 
   // -------------------------
   // 生徒一覧ロード
   // -------------------------
-  async function load() {
+  async function loadStudents() {
     if (!browser) return;
 
     loading = true;
 
-    const res = await apiFetch(`/api/students`);
-    let data = await res.json();
-    data = data.filter(s => s.grade === grade);
+    try {
+      let data = await apiFetch(`/api/students`);
+      data = data.filter(s => s.grade === grade);
 
-    // filtros no frontend
-    if (course !== "") data = data.filter(s => s.course === course);
-    if (className !== "") data = data.filter(s => s.class_name === className);
+      if (course !== "") data = data.filter(s => s.course === course);
+      if (className !== "") data = data.filter(s => s.class_name === className);
 
-    students = data;
+      students = data;
+    } catch (e) {
+      console.error(e);
+      errorMessage = "生徒一覧の取得に失敗しました";
+      showError = true;
+    }
+
     loading = false;
   }
-
-
-
 
   // -------------------------
   // 検索
@@ -66,42 +71,55 @@
   let searching = false;
 
   async function search() {
-    if (!browser) return; // SSR防止
+    if (!browser) return;
 
     const kw = keyword.trim();
-
     if (kw.length === 0) {
       searchResults = [];
       return;
     }
 
     searching = true;
-    const res = await apiFetch(`/api/students/search?keyword=${kw}`);
-    searchResults = await res.json();
+
+    try {
+      searchResults = await apiFetch(`/api/students/search?keyword=${kw}`);
+    } catch (e) {
+      console.error(e);
+      errorMessage = "検索に失敗しました";
+      showError = true;
+    }
+
     searching = false;
   }
 
   // -------------------------
-  // 初回ロード（ブラウザのみ）
+  // 初回ロード
   // -------------------------
   onMount(() => {
     loadClasses();
-    load();
+    loadStudents();
   });
 
   // -------------------------
-  // 学年変更時（★ SSR-safe）
+  // 学年変更時
   // -------------------------
-  $: if (browser && grade !== "") loadClasses();
+  $: if (browser && grade) {
+    loadClasses();
+    loadStudents();
+  }
 
   // -------------------------
-  // フィルター変更時（SSR-safe）
+  // コース変更時
   // -------------------------
-  $: if (browser && !showError && keyword.trim().length === 0) {
-    grade;
-    course;
-    className;
-    load();
+  $: if (browser && keyword.trim().length === 0 && course !== undefined) {
+    loadStudents();
+  }
+
+  // -------------------------
+  // クラス変更時
+  // -------------------------
+  $: if (browser && keyword.trim().length === 0 && className !== undefined) {
+    loadStudents();
   }
 
   // -------------------------
@@ -116,15 +134,17 @@
     return true;
   });
 
-
+  // -------------------------
+  // ダウンロード
+  // -------------------------
   async function downloadClasslist(course) {
     try {
       const url = `/api/students/classlist/export?grade=${grade}&course=${course}`;
-      const res = await apiFetch(url);
 
-      if (!res.ok) {
-        throw new Error("ダウンロードに失敗しました");
-      }
+      // download precisa de fetch real
+      const res = await fetch(url);
+
+      if (!res.ok) throw new Error("ダウンロードに失敗しました");
 
       const blob = await res.blob();
       const downloadUrl = URL.createObjectURL(blob);
@@ -176,19 +196,11 @@
       全日コース
     </button>
 
-    <button
-      class="download-button"
-      on:click={() => downloadClasslist("水")}
-      style="margin-left: 8px;"
-    >
+    <button class="download-button" on:click={() => downloadClasslist("水")} style="margin-left: 8px;">
       水曜コース
     </button>
 
-    <button
-      class="download-button"
-      on:click={() => downloadClasslist("集")}
-      style="margin-left: 8px;"
-    >
+    <button class="download-button" on:click={() => downloadClasslist("集")} style="margin-left: 8px;">
       集中コース
     </button>
   </div>
@@ -206,15 +218,8 @@
 </label>
 
 <div style="margin: 10px 0;">
-  <label>
-    <input type="checkbox" bind:checked={filterMale} />
-    男子
-  </label>
-
-  <label style="margin-left: 10px;">
-    <input type="checkbox" bind:checked={filterFemale} />
-    女子
-  </label>
+  <label><input type="checkbox" bind:checked={filterMale} />男子</label>
+  <label style="margin-left: 10px;"><input type="checkbox" bind:checked={filterFemale} />女子</label>
 </div>
 
 <div style="margin: 16px 0;">
@@ -319,7 +324,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0,0,0,0.4);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -332,7 +337,7 @@
     border-radius: 8px;
     min-width: 260px;
     text-align: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   }
 
   .modal button {

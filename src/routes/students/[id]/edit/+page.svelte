@@ -4,7 +4,6 @@
   import { page } from "$app/stores";
   import { apiFetch } from "$lib/api";
 
-
   let student = null;
   let loading = true;
   let error = "";
@@ -15,55 +14,55 @@
 
   let photoFile = null;
 
+  // -------------------------------
+  // 生徒データ取得
+  // -------------------------------
   onMount(async () => {
     try {
-      const res = await apiFetch(`/api/students/${id}`);
-      if (!res.ok) throw new Error("生徒データの取得に失敗しました");
-      student = await res.json();
+      student = await apiFetch(`/api/students/${id}`);
     } catch (e) {
-      error = String(e);
+      error = "生徒データの取得に失敗しました";
+      console.error(e);
     }
     loading = false;
   });
 
+  // -------------------------------
+  // 保存処理
+  // -------------------------------
   async function save() {
-  error = "";
-  success = "";
+    error = "";
+    success = "";
 
-  try {
-    // 写真アップロード（もし選択されていれば）
-    if (photoFile) {
-      const formData = new FormData();
-      formData.append("file", photoFile);
+    try {
+      // 写真アップロード（もし選択されていれば）
+      if (photoFile) {
+        const formData = new FormData();
+        formData.append("file", photoFile);
 
-      const uploadRes = await apiFetch(
-        `/api/upload_photo/${id}`,
-        { method: "POST", body: formData }
-      );
+        const uploadData = await apiFetch(
+          `/api/upload_photo/${id}`,
+          { method: "POST", body: formData }
+        );
 
-      if (!uploadRes.ok) throw new Error("写真アップロードに失敗しました");
+        student.photo = uploadData.filename;
+      }
 
-      const data = await uploadRes.json();
-      student.photo = data.filename;
+      // 生徒データ保存（PUT）
+      await apiFetch(`/api/students/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(student)
+      });
+
+      // 保存成功 → 詳細ページへ戻る
+      window.location.href = `/students/${id}`;
+
+    } catch (e) {
+      console.error(e);
+      error = "保存に失敗しました";
     }
-
-    // 生徒データ保存（PUT）
-    const res = await apiFetch(`/api/students/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(student)
-    });
-
-    if (!res.ok) throw new Error("保存に失敗しました");
-
-    // ★ 保存成功 → 一覧ページへ戻る
-    window.location.href = `/students/${id}`;
-
-  } catch (e) {
-    error = String(e);
   }
-}
-
 </script>
 
 <h1>生徒情報 編集</h1>
@@ -165,7 +164,6 @@
     </table>
 
   </div>
-
 
 </div>
 

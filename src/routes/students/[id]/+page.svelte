@@ -4,7 +4,6 @@
   import { page } from "$app/stores";
   import { apiFetch } from "$lib/api";
 
-
   let student = null;
   let loading = true;
   let error = "";
@@ -34,26 +33,26 @@
       return;
     }
 
-    const res = await apiFetch("/api/students/joseki", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        student_id: student.id,
-        date: josekiDate,
-        password: josekiPassword
-      })
-    });
+    try {
+      await apiFetch("/api/students/joseki", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_id: student.id,
+          date: josekiDate,
+          password: josekiPassword
+        })
+      });
 
-    if (!res.ok) {
+      alert("除籍しました");
+      window.location.href = "/students";
+
+    } catch (e) {
       alert("除籍に失敗しました");
-      return;
     }
-
-    alert("除籍しました");
-    window.location.href = "/students";
   }
 
-  // ====== TENGAKU MODAL ======
+  // ====== TENGAKU ======
   let showTengaku = false;
   let tengakuDate = "";
   let tengakuSchool = "";
@@ -65,28 +64,27 @@
       return;
     }
 
-    const res = await apiFetch("/api/students/tengaku", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        student_id: student.id,
-        date: tengakuDate,
-        destination_school: tengakuSchool,
-        password: tengakuPassword
-      })
-    });
+    try {
+      await apiFetch("/api/students/tengaku", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_id: student.id,
+          date: tengakuDate,
+          destination_school: tengakuSchool,
+          password: tengakuPassword
+        })
+      });
 
-    if (!res.ok) {
+      alert("転学処理が完了しました");
+      window.location.href = "/students";
+
+    } catch (e) {
       alert("転学に失敗しました");
-      return;
     }
-
-    alert("転学処理が完了しました");
-    window.location.href = "/students";
   }
 
-
-  // ====== TAIGAKU MODAL ======
+  // ====== TAIGAKU ======
   let showTaigaku = false;
   let taigakuDate = "";
   let taigakuPassword = "";
@@ -97,26 +95,24 @@
       return;
     }
 
-    const res = await apiFetch("/api/students/taigaku", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        student_id: student.id,
-        date: taigakuDate,
-        password: taigakuPassword
-      })
-    });
+    try {
+      await apiFetch("/api/students/taigaku", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_id: student.id,
+          date: taigakuDate,
+          password: taigakuPassword
+        })
+      });
 
-    if (!res.ok) {
+      alert("退学処理が完了しました");
+      window.location.href = "/students";
+
+    } catch (e) {
       alert("退学に失敗しました");
-      return;
     }
-
-    alert("退学処理が完了しました");
-    window.location.href = "/students";
   }
-
-
 
   function openCourseModal() {
     newCourse = student.course;
@@ -134,7 +130,7 @@
     changeError = "";
 
     try {
-      const res = await apiFetch("/api/students/change_course", {
+      const result = await apiFetch("/api/students/change_course", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -144,15 +140,12 @@
         })
       });
 
-      if (!res.ok) throw new Error("変更失敗");
-
-      const result = await res.json();
-
       student.course = result.course;
       student.class_name = result.class_name;
       student.attend_no = result.attend_no;
 
       showCourseModal = false;
+
     } catch (e) {
       changeError = "コース変更に失敗しました";
     } finally {
@@ -187,11 +180,9 @@
 
   onMount(async () => {
     try {
-      const res = await apiFetch(`/api/students/${id}`, { cache: "no-store" });
-      if (!res.ok) throw new Error("生徒データの取得に失敗しました");
-      student = await res.json();
+      student = await apiFetch(`/api/students/${id}`, { cache: "no-store" });
     } catch (e) {
-      error = String(e);
+      error = "生徒データの取得に失敗しました";
     }
     loading = false;
   });
@@ -254,14 +245,8 @@
 
     <button on:click={openCourseModal}>コース変更</button>
     <button class="danger" on:click={() => showJoseki = true}>除籍</button>
-    <button class="danger" on:click={() => showTengaku = true}>
-      転学
-    </button>
-    <button class="danger" on:click={() => showTaigaku = true}>
-      退学
-    </button>
-    
-    
+    <button class="danger" on:click={() => showTengaku = true}>転学</button>
+    <button class="danger" on:click={() => showTaigaku = true}>退学</button>
   </div>
 </div>
 
@@ -344,8 +329,6 @@
   </div>
 </div>
 {/if}
-
-
 
 {#if showCourseModal}
 <div class="modal-backdrop">
@@ -447,20 +430,19 @@
   .edit-btn { margin-top: 20px; }
 
   .form-group {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 12px;
-}
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 12px;
+  }
 
-.form-group label {
-  font-weight: bold;
-  margin-bottom: 4px;
-}
+  .form-group label {
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
 
-.actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 16px;
-}
-
+  .actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+  }
 </style>

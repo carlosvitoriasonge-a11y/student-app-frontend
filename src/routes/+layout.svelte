@@ -26,43 +26,9 @@
     { name: "転出者一覧", page: "/exit" }
   ];
 
-  let lastActivity = Date.now();
-  let timeoutMinutes = 5;
 
-  $: sessionTimeout.subscribe(v => timeoutMinutes = v);
+  
 
-  function resetActivity() {
-      lastActivity = Date.now();
-  }
-
-  onMount(() => {
-      // 🔐 Proteção de rota
-      if (browser) {
-          const key = localStorage.getItem("appKey");
-          if (!key && window.location.pathname !== "/login") {
-              window.location.href = "/login";
-              return;
-          }
-      }
-
-      // SSR-safe
-      if (!browser) return;
-
-      // 🕒 Monitorar atividade
-      window.addEventListener("mousemove", resetActivity);
-      window.addEventListener("keydown", resetActivity);
-      window.addEventListener("click", resetActivity);
-      window.addEventListener("scroll", resetActivity);
-
-      // 🔄 Logout automático
-      setInterval(() => {
-          const diff = Date.now() - lastActivity;
-          if (diff > timeoutMinutes * 60 * 1000) {
-              localStorage.removeItem("appKey");
-              window.location.href = "/login";
-          }
-      }, 30000);
-  });
 </script>
 
 <div class="app-container">
@@ -75,7 +41,7 @@
       <button on:click={() => {
           if (browser) {
               localStorage.removeItem("appKey");
-              window.location.href = "/login";
+              
           }
       }}>ログアウト</button>
     </div>
