@@ -4,7 +4,7 @@ import { browser } from "$app/environment";
 export async function apiFetch(url, options = {}) {
   if (!options.headers) options.headers = {};
 
-  let base;
+  let base = "http://127.0.0.1:8000"; // fallback seguro
 
   if (browser) {
     const host = window.location.hostname;
@@ -14,9 +14,6 @@ export async function apiFetch(url, options = {}) {
     } else {
       base = "http://192.168.1.58:8000";     // rodando no servidor
     }
-  } else {
-    // SSR (quase nunca usado no seu caso)
-    base = "http://127.0.0.1:8000";
   }
 
   // Separa path e query params
