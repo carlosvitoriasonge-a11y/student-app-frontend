@@ -4,12 +4,11 @@ import { browser } from "$app/environment";
 export async function apiFetch(url, options = {}) {
   if (!options.headers) options.headers = {};
 
-  // Detecta ambiente:
-  // - Em desenvolvimento no Mac → localhost
-  // - Em produção no servidor → 127.0.0.1
+  // Em produção (navegador) → chama o backend do servidor
+  // Em desenvolvimento (SSR local) → não usado com adapter-static
   const base = browser
-    ? "http://localhost:8000"          // navegador no Mac
-    : "http://127.0.0.1:8000";         // SSR no servidor
+    ? "http://192.168.1.58:8000"
+    : "http://127.0.0.1:8000";
 
   const res = await fetch(base + url, options);
 
