@@ -4,17 +4,29 @@ import { browser } from "$app/environment";
 export async function apiFetch(url, options = {}) {
   if (!options.headers) options.headers = {};
 
-  const base = "http://127.0.0.1:8000";
+  let base;
+
+  if (browser) {
+    const host = window.location.hostname;
+
+    if (host === "localhost" || host === "127.0.0.1") {
+      base = "http://127.0.0.1:8000";        // rodando no Mac
+    } else {
+      base = "http://192.168.1.58:8000";     // rodando no servidor
+    }
+  } else {
+    // SSR (quase nunca usado no seu caso)
+    base = "http://127.0.0.1:8000";
+  }
 
   // Separa path e query params
   const qIndex = url.indexOf("?");
   const path = qIndex === -1 ? url : url.slice(0, qIndex);
   const query = qIndex === -1 ? "" : url.slice(qIndex);
 
-  // Normaliza só o path (sem tocar no query)
+  // Normaliza só o path
   const normalizedPath = path.endsWith("/") ? path : path + "/";
 
-  // Monta a URL final SEM adicionar barra antes do ?
   const full = normalizedPath + query;
 
   const res = await fetch(base + full, options);
