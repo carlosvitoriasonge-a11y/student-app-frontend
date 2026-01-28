@@ -141,14 +141,10 @@
     try {
       const url = `/api/students/classlist/export?grade=${grade}&course=${course}`;
 
-      // download precisa de fetch real
-      const res = await fetch(url);
+      // ✔ usa apiFetch para enviar token e receber blob
+      const blob = await apiFetch(url, {}, "blob");
 
-      if (!res.ok) throw new Error("ダウンロードに失敗しました");
-
-      const blob = await res.blob();
       const downloadUrl = URL.createObjectURL(blob);
-
       const a = document.createElement("a");
       a.href = downloadUrl;
       a.download = `${grade}_${course}_classlist.xlsx`;
@@ -156,10 +152,11 @@
 
       URL.revokeObjectURL(downloadUrl);
     } catch (err) {
-      errorMessage = err.message;
+      errorMessage = "ダウンロードに失敗しました";
       showError = true;
     }
   }
+
 </script>
 
 <h1>生徒一覧</h1>
@@ -192,15 +189,15 @@
   <div style="margin: 16px 0;">
     <p>コース別ダウンロード：</p>
 
-    <button class="download-button" on:click={() => downloadClasslist("全")}>
+    <button class="download-button" on:click={() => downloadClasslist("z")}>
       全日コース
     </button>
 
-    <button class="download-button" on:click={() => downloadClasslist("水")} style="margin-left: 8px;">
+    <button class="download-button" on:click={() => downloadClasslist("w")} style="margin-left: 8px;">
       水曜コース
     </button>
 
-    <button class="download-button" on:click={() => downloadClasslist("集")} style="margin-left: 8px;">
+    <button class="download-button" on:click={() => downloadClasslist("s")} style="margin-left: 8px;">
       集中コース
     </button>
   </div>

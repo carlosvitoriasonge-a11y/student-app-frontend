@@ -1,103 +1,125 @@
 <script lang="ts">
-    let file: File | null = null;
-    let message = "";
-    let error = "";
-  
-    async function uploadCSV() {
-      message = "";
-      error = "";
-  
-      if (!file) {
-        error = "CSVファイルを選択してください。";
-        return;
-      }
-  
-      const formData = new FormData();
-      formData.append("file", file);
-  
-      try {
-        const res = await fetch("/api/students/import_csv", {
+  import { apiFetch } from "$lib/api.js";
+
+  let file: File | null = null;
+  let message = "";
+  let error = "";
+
+  // -------------------------------
+  // CSV UPLOAD
+  // -------------------------------
+  async function uploadCSV() {
+    message = "";
+    error = "";
+
+    if (!file) {
+      error = "CSVファイルを選択してください。";
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      // ✔ CORREÇÃO: rota correta é /api/students/import_csv
+      const data = await apiFetch(
+        "/api/students/import_csv",
+        {
           method: "POST",
           body: formData
-        });
-  
-        if (!res.ok) {
-          const err = await res.json();
-          error = err.detail || "アップロードに失敗しました。";
-          return;
-        }
-  
-        const data = await res.json();
-        message = `${data.added} 件の生徒を追加しました。`;
-  
-      } catch (e) {
-        error = "サーバーに接続できません。";
-      }
+        },
+        "json"
+      );
+
+      message = `${data.added} 件の生徒を追加しました。`;
+
+    } catch (e) {
+      error = "アップロードに失敗しました。";
     }
+  }
+
+  // -------------------------------
+  // CSV TEMPLATE DOWNLOAD
+  // -------------------------------
+  async function downloadTemplate() {
+    error = "";
+    message = "";
+
+    try {
+      const blob = await apiFetch("/api/students/template_csv", {}, "blob");
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "template.csv";
+      a.click();
+
+    } catch (e) {
+      error = "テンプレートをダウンロードできません。";
+    }
+  }
 </script>
 
 <h1>CSV 一括登録</h1>
 
-<!-- ★ テンプレートダウンロード -->
-<a class="template" href="/api/students/template_csv">
+<button class="template" on:click={downloadTemplate}>
   CSV テンプレートをダウンロード
-</a>
+</button>
 
 <div class="box">
-    <label>
-      CSV ファイルを選択:
-      <input
-        type="file"
-        accept=".csv"
-        on:change={(e) => {
-          const input = e.target as HTMLInputElement;
-          file = input.files?.[0] || null;
-        }}
-        
-      />
-    </label>
+  <label>
+    CSV ファイルを選択:
+    <input
+      type="file"
+      accept=".csv"
+      on:change={(e) => {
+        const input = e.target as HTMLInputElement;
+        file = input.files?.[0] || null;
+      }}
+    />
+  </label>
 
-    <button on:click={uploadCSV}>アップロード</button>
+  <button on:click={uploadCSV}>アップロード</button>
 
-    {#if message}
-      <p class="success">{message}</p>
-    {/if}
+  {#if message}
+    <p class="success">{message}</p>
+  {/if}
 
-    {#if error}
-      <p class="error">{error}</p>
-    {/if}
+  {#if error}
+    <p class="error">{error}</p>
+  {/if}
 </div>
 
 <style>
-    .box {
-      padding: 20px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      width: 400px;
-      background: #fafafa;
-    }
-    button {
-      margin-top: 10px;
-      padding: 8px 16px;
-    }
-    .template {
-      display: inline-block;
-      margin-bottom: 15px;
-      padding: 8px 14px;
-      background: #3498db;
-      color: white;
-      border-radius: 4px;
-      text-decoration: none;
-    }
-    .template:hover {
-      background: #2980b9;
-    }
-    .success {
-      color: green;
-      margin-top: 10px;
-    }
-    .error {
-      color: red;
-      margin-top: 10px;
-    }
+  .box {
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    width: 400px;
+    background: #fafafa;
+  }
+  button {
+    margin-top: 10px;
+    padding: 8px 16px;
+  }
+  .template {
+    display: inline-block;
+    margin-bottom: 15px;
+    padding: 8px 14px;
+    background: #3498db;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+  }
+  .template:hover {
+    background: #2980b9;
+  }
+  .success {
+    color: green;
+    margin-top: 10px;
+  }
+  .error {
+    color: red;
+    margin-top: 10px;
+  }
 </style>

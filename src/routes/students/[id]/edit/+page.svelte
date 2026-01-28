@@ -13,6 +13,9 @@
   $: id = $page.params.id;
 
   let photoFile = null;
+  let photoUrl = null;
+
+  console.log("BASE:", import.meta.env.VITE_API_BASE);
 
   // -------------------------------
   // 生徒データ取得
@@ -20,12 +23,40 @@
   onMount(async () => {
     try {
       student = await apiFetch(`/api/students/${id}`);
+      await loadPhoto();
     } catch (e) {
       error = "生徒データの取得に失敗しました";
       console.error(e);
     }
     loading = false;
   });
+
+  // -------------------------------
+  // 写真読み込み（TOKEN付き）
+  // -------------------------------
+  async function loadPhoto() {
+    if (!student?.photo) {
+      photoUrl = null;
+      return;
+    }
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE}/photos/${student.photo}`);
+
+      if (!res.ok) {
+        console.error("写真読み込み失敗:", res.status);
+        photoUrl = null;
+        return;
+      }
+
+      const blob = await res.blob();
+      photoUrl = URL.createObjectURL(blob);
+
+    } catch (e) {
+      console.error("写真読み込み失敗:", e);
+      photoUrl = null;
+    }
+  }
 
   // -------------------------------
   // 保存処理
@@ -41,21 +72,24 @@
         formData.append("file", photoFile);
 
         const uploadData = await apiFetch(
-          `/api/upload_photo/${id}`,
-          { method: "POST", body: formData }
+          `/upload_photo/${id}`,
+          {
+            method: "POST",
+            body: formData
+          }
         );
 
         student.photo = uploadData.filename;
+        student = { ...student };
+        await loadPhoto();
       }
 
       // 生徒データ保存（PUT）
       await apiFetch(`/api/students/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(student)
       });
 
-      // 保存成功 → 詳細ページへ戻る
       window.location.href = `/students/${id}`;
 
     } catch (e) {
@@ -143,8 +177,8 @@
   <div class="right">
 
     <div class="photo-box">
-      {#if student.photo}
-        <img src={"/api/photos/" + student.photo} alt="顔写真">
+      {#if photoUrl}
+        <img src={photoUrl} alt="顔写真">
       {:else}
         <div class="no-photo">写真なし</div>
       {/if}
@@ -168,10 +202,6 @@
 </div>
 
 <button class="save-btn" on:click={save}>保存</button>
-
-{#if success}
-  <p style="color:green">{success}</p>
-{/if}
 
 {/if}
 

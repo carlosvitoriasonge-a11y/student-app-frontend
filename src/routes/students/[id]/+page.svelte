@@ -227,7 +227,8 @@
   <div class="right">
     <div class="photo-box">
       {#if student.photo}
-        <img src={`http://${window.location.hostname}/photos/${student.photo}`} alt="顔写真">
+        <img src={`http://127.0.0.1:8000/photos/${student.photo}`} alt="顔写真">
+
       {:else}
         <div class="no-photo">写真なし</div>
       {/if}
@@ -446,3 +447,5 @@
     margin-top: 16px;
   }
 </style>
+
+   
