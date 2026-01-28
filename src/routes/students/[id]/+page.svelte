@@ -231,7 +231,7 @@
   <div class="right">
     <div class="photo-box">
       {#if student.photo}
-        <img src={`http://${window.location.hostname}:8000/photos/${student.photo}`} alt="顔写真">
+        <img src={`http://${window.location.hostname}:8000/photos/${student.photo}?t=${Date.now()}`} alt="顔写真">
       {:else}
         <div class="no-photo">写真なし</div>
       {/if}

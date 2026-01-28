@@ -41,7 +41,8 @@
     }
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE}/photos/${student.photo}`);
+      const res = await fetch(`http://${window.location.hostname}:8000/photos/${student.photo}`);
+
 
       if (!res.ok) {
         console.error("写真読み込み失敗:", res.status);
