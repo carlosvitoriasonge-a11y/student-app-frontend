@@ -230,7 +230,7 @@
   <div class="right">
     <div class="photo-box">
       {#if student.photo}
-        <img src={`${API_BASE}/photos/${student.photo}`} alt="顔写真">
+        <img src={`http://192.168.1.58:8000/photos/${student.photo}`} alt="顔写真">
 
       {:else}
         <div class="no-photo">写真なし</div>
