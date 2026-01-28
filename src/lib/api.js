@@ -4,7 +4,8 @@ import { goto } from "$app/navigation";
 export async function apiFetch(url, options = {}, responseType = "json") {
   if (!options.headers) options.headers = {};
 
-  const base = import.meta.env.VITE_API_BASE; // ex: "http://127.0.0.1:8000"
+  const base = `http://${window.location.hostname}:8000`;
+
 
   // Token
   const token = localStorage.getItem("access_token");
