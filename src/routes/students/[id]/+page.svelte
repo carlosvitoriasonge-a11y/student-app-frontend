@@ -3,6 +3,9 @@
   import { onMount } from "svelte";
   import { page } from "$app/stores";
   import { apiFetch } from "$lib/api";
+  const API_BASE = import.meta.env.VITE_API_BASE;
+
+
 
   let student = null;
   let loading = true;
@@ -227,7 +230,7 @@
   <div class="right">
     <div class="photo-box">
       {#if student.photo}
-        <img src={`http://127.0.0.1:8000/photos/${student.photo}`} alt="顔写真">
+        <img src={`${API_BASE}/photos/${student.photo}`} alt="顔写真">
 
       {:else}
         <div class="no-photo">写真なし</div>
