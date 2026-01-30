@@ -229,11 +229,11 @@
         <tr><th>住所②</th><td>{student.address2}</td></tr>
         <tr><th>出身中学</th><td>{student.junior_high}</td></tr>
         <tr><th>中学校卒業年度</th><td> {student.junior_high_grad_date || "-"}（{toWareki(student.junior_high_grad_date)}）</td></tr>
-        <tr><th>編入学</th>
+        <tr><th>編入学</th>{student.junior_high_grad_date || "-"}（{toWareki(student.junior_high_grad_date)}）</td></tr>
           <td>{student.transfer_advanced_date || "-"}</td>
         </tr>
         
-        <tr><th>転入学</th>
+        <tr><th>転入学</th>{student.junior_high_grad_date || "-"}（{toWareki(student.junior_high_grad_date)}）</td></tr>
           <td>{student.transfer_date || "-"}</td>
         </tr>
         
