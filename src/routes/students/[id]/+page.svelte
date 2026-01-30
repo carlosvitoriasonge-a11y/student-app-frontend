@@ -170,8 +170,24 @@
   }
 
   function toWareki(dateStr) {
-    if (!dateStr) return "";
+    if (!dateStr) return "-";
+
+    // Caso: só ano/mes (ex: 2024/03)
+    const ym = dateStr.match(/^(\d{4})\/(\d{1,2})$/);
+    if (ym) {
+      const y = parseInt(ym[1]);
+      const m = parseInt(ym[2]);
+
+      if (y >= 2019) return `令和${y - 2018}年 ${m}月`;
+      if (y >= 1989) return `平成${y - 1988}年 ${m}月`;
+      if (y >= 1926) return `昭和${y - 1925}年 ${m}月`;
+      return `${y}年 ${m}月`;
+    }
+
+    // Caso: ano/mes/dia normal
     const d = new Date(dateStr);
+    if (isNaN(d)) return "-";
+
     const y = d.getFullYear();
     const m = d.getMonth() + 1;
     const day = d.getDate();
@@ -212,8 +228,28 @@
         <tr><th>住所①</th><td>{student.address1}</td></tr>
         <tr><th>住所②</th><td>{student.address2}</td></tr>
         <tr><th>出身中学</th><td>{student.junior_high}</td></tr>
-        <tr><th>中学校卒業年度</th><td>{student.junior_high_grad_date}（{toWareki(student.junior_high_grad_date)}）</td></tr>
-        <tr><th>入学年度</th><td>{student.admission_date}（{toWareki(student.admission_date)}）</td></tr>
+        <tr><th>中学校卒業年度</th><td> {student.junior_high_grad_date || "-"}（{toWareki(student.junior_high_grad_date)}）</td></tr>
+        <tr><th>編入学</th>
+          <td>{student.transfer_advanced_date || "-"}</td>
+        </tr>
+        
+        <tr><th>転入学</th>
+          <td>{student.transfer_date || "-"}</td>
+        </tr>
+        
+        <tr><th>前在籍校</th>
+          <td>{student.previous_school || "-"}</td>
+        </tr>
+        
+        <tr><th>課程</th>
+          <td>{student.course_type || "-"}</td>
+        </tr>
+        
+        <tr><th>前在籍校住所</th>
+          <td>{student.previous_school_address || "-"}</td>
+        </tr>
+        
+        <tr><th>入学年度</th><td>{student.admission_date || "-"}（{toWareki(student.admission_date)}）</td></tr>
         <tr><th>通学方法</th><td>{student.commute}</td></tr>
         <tr><th>担任</th><td>{student.hr_teacher}</td></tr>
         <tr><th>保護者氏名</th><td>{student.guardian1}</td></tr>

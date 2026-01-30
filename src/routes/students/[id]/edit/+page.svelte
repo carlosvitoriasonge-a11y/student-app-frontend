@@ -20,9 +20,22 @@
   // -------------------------------
   // 生徒データ取得
   // -------------------------------
+  function normalizeDateForInput(d) {
+    if (!d) return "";
+    if (/^\d{4}\/\d{1,2}$/.test(d)) {
+      const [y, m] = d.split("/");
+      return `${y}-${m.padStart(2, "0")}-01`;
+    }
+    return d;
+  }
+
   onMount(async () => {
     try {
       student = await apiFetch(`/api/students/${id}`);
+
+    // Normaliza datas sem dia para o input
+    student.junior_high_grad_date = normalizeDateForInput(student.junior_high_grad_date);
+
       await loadPhoto();
     } catch (e) {
       error = "生徒データの取得に失敗しました";
@@ -139,9 +152,34 @@
           <th>入学年度</th>
           <td><input type="date" bind:value={student.admission_date}></td>
         </tr>
+        <tr>
+          <th>編入学</th>
+          <td><input type="date" bind:value={student.transfer_advanced_date}></td>
+        </tr>
+        
+        <tr>
+          <th>転入学</th>
+          <td><input type="date" bind:value={student.transfer_date}></td>
+        </tr>
+        
+        <tr>
+          <th>前在籍校</th>
+          <td><input bind:value={student.previous_school}></td>
+        </tr>
+        
+        <tr>
+          <th>課程</th>
+          <td><input bind:value={student.course_type}></td>
+        </tr>
+        
+        <tr>
+          <th>前在籍校住所</th>
+          <td><input bind:value={student.previous_school_address}></td>
+        </tr>
+        
 
         <tr><th>通学方法</th><td><input bind:value={student.commute}></td></tr>
-        <tr><th>担任</th><td><input bind:value={student.hr_teacher}></td></tr>
+        
 
         <tr><th>保護者氏名</th><td><input bind:value={student.guardian1}></td></tr>
         <tr><th>保護者ふりがな</th><td><input bind:value={student.guardian1_kana}></td></tr>
