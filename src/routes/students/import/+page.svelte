@@ -33,10 +33,32 @@
 
       message = `${data.added} 件の生徒を追加しました。`;
 
-    } catch (e) {
-      error = "アップロードに失敗しました。";
-    }
+    } catch (e : any) {
+      // Tenta extrair a mensagem do backend 
+      let detail = e?.response?.data?.detail || e?.message || "";
+
+      // ------------------------------- 
+      // MAPEAMENTO DE ERROS ESPECÍFICOS 
+      // ------------------------------- 
+      if (detail === "duplicate_student") { 
+        error = "既に登録されている生徒が含まれています。"; 
+      } 
+      else if (detail.includes("コースが判別できません")) { 
+        error = "コース列に誤りがあります。CSV を確認してください。"; 
+      } else if (detail.includes("同じCSVがすでにアップロードされています")) { 
+        error = "同じ CSV は再度アップロードできません。"; 
+      } else if (detail.includes("入学年月日") || detail.includes("編入学") || detail.includes("転入学")) { 
+        error = "入学関連の日付に誤りがあります。CSV を確認してください。"; 
+      } else if (detail.includes("CSVファイルをアップロードしてください")) { 
+        error = "CSV ファイルを選択してください。"; 
+      } else { 
+        // ------------------------------- 
+        // ERRO DESCONHECIDO → fallback 
+        // ------------------------------- 
+        error = "エラーが発生しました。CSV を確認してください。";
+      }
   }
+}
 
   // -------------------------------
   // CSV TEMPLATE DOWNLOAD

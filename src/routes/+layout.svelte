@@ -8,11 +8,13 @@
   // LOGOUT POR INATIVIDADE
   // -------------------------------
   let inactivityTimer;
+  let watcherStarted = false;
 
   function resetInactivityTimer() {
     clearTimeout(inactivityTimer);
 
-    const minutes = Number(localStorage.getItem("logout_minutes")) || 15;
+    const raw = localStorage.getItem("logout_minutes");
+    const minutes = raw && !isNaN(Number(raw)) ? Number(raw) : 15;
     const LIMIT = minutes * 60 * 1000;
 
     inactivityTimer = setTimeout(() => {
@@ -24,8 +26,17 @@
   }
 
   function startInactivityWatcher() {
-    if (!browser) return;
+    if (!browser || watcherStarted) return;
 
+    watcherStarted = true;
+
+    // remove listeners antigos
+    window.removeEventListener("mousemove", resetInactivityTimer);
+    window.removeEventListener("keydown", resetInactivityTimer);
+    window.removeEventListener("click", resetInactivityTimer);
+    window.removeEventListener("scroll", resetInactivityTimer);
+
+    // adiciona listeners novos
     window.addEventListener("mousemove", resetInactivityTimer);
     window.addEventListener("keydown", resetInactivityTimer);
     window.addEventListener("click", resetInactivityTimer);
@@ -69,6 +80,7 @@
 
   let studentMenu = [
     { name: "生徒一覧", page: "/students" },
+    { name: "休学中の生徒一覧", page: "/students/suspended" },
     { name: "生徒登録", page: "/students/new" },
     { name: "CSV 一括登録", page: "/students/import" },
     { name: "昇級処理", page: "/promote" },

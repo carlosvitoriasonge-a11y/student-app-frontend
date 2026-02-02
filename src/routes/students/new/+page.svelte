@@ -108,9 +108,21 @@
 
       alert(`登録しました（ID: ${data.id}）`);
 
-    } catch (e) {
+    }catch (e) {
       console.error(e);
-      message = "登録に失敗しました";
+
+      let detail = e?.response?.data?.detail || e?.message || "";
+      if (detail === "duplicate_student") {
+        message = "同じ生徒が既に登録されています";
+      } 
+      else if (detail.includes("入学年月日")|| detail.includes("編入学") || detail.includes("転入学")) {
+        message = "入学関連の日付に誤りがあります。入力内容を確認してください。";
+      } 
+      else if (detail.includes("必須")|| detail.includes("required")) {
+        message = "必須項目が未入力です。確認してください。";
+      } else {
+      message = "登録に失敗しました。入力内容を確認してください。";
+      }
     } finally {
       submitting = false;
     }
