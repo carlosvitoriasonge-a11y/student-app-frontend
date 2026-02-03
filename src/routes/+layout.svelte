@@ -100,7 +100,7 @@
       if (gradeDiff !== 0) return gradeDiff;
 
       return a.className.localeCompare(b.className, "ja");
-      
+
     });
 
   }
@@ -274,6 +274,10 @@ onMount(() => {
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     z-index: 1000;
+
+    /* ← ADICIONE ESTAS LINHAS */ 
+    overflow-y: auto; 
+    max-height: calc(100vh - 60px); 
   }
 
   .sidebar.open {
