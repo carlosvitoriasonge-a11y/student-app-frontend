@@ -1,8 +1,13 @@
 <script>
+  export const ssr = false; // ← ISSO É IMPORTANTE
+
   import { browser } from "$app/environment";
   import { onMount } from "svelte";
   import ServerStatus from "$lib/ServerStatus.svelte";
   import { goto } from "$app/navigation";
+
+  // dados vindos do +layout.js
+  export let data;
 
   // -------------------------------
   // LOGOUT POR INATIVIDADE
@@ -45,23 +50,60 @@
     resetInactivityTimer();
   }
 
-  // -------------------------------
-  // VERIFICA TOKEN AO ENTRAR
-  // -------------------------------
-  onMount(() => {
-    if (!browser) return;
 
-    if (window.location.pathname !== "/login") {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        goto("/login");
-        return;
-      }
+  let classMenuOpen = false;
+  let classMenu = [];
 
-      startInactivityWatcher();
+  const courseLabel = (c) => {
+    if (c === "全") return "全日";
+    if (c === "水") return "水曜";
+    if (c === "集") return "集中";
+    return c;
+  };
+
+  $: if (data?.allStudents) {
+    const set = new Set();
+
+    for (const s of data.allStudents) {
+      const className = String(s.class_name || "").trim();
+      if (!className) continue;
+
+      const key = `${s.course}-${s.grade}-${className}`;
+      set.add(key);
     }
-  });
 
+    
+
+    classMenu = Array.from(set).map((key) => {
+      const [course, grade, className] = key.split("-");
+      return {
+        course,
+        grade: Number(grade),
+        className,
+        name: `${courseLabel(course)} ${grade}年 ${className}`,
+        page: `/class/${course}/${grade}/${className}`
+      };
+    });
+
+    // ordenar por curso, depois por série, depois por nome da classe
+    const courseOrder = { 
+      "全": 1, 
+      "水": 2, 
+      "集": 3 
+    };
+    
+    classMenu.sort((a, b) => {
+      const courseDiff = (courseOrder[a.course] - courseOrder[b.course]);
+      if (courseDiff !== 0) return courseDiff;
+
+      const gradeDiff = a.grade - b.grade;
+      if (gradeDiff !== 0) return gradeDiff;
+
+      return a.className.localeCompare(b.className, "ja");
+      
+    });
+
+  }
   // -------------------------------
   // SIDEBAR RETRÁTIL (sempre)
   // -------------------------------
@@ -72,6 +114,9 @@
   }
 
   let studentMenuOpen = false;
+
+
+
 
   let mainMenu = [
     { name: "教員管理", page: "/teachers" },
@@ -89,6 +134,15 @@
     { name: "卒業生一覧", page: "/students/graduates" },
     { name: "転出者一覧", page: "/exit" }
   ];
+
+onMount(() => {
+  if (!browser) return;
+
+  if (window.location.pathname !== "/login") {
+    startInactivityWatcher();
+  }
+});
+
 </script>
 
 <div class="app-container">
@@ -133,6 +187,26 @@
           {/each}
         </div>
       {/if}
+
+      <div class="menu-item parent" on:click={() => (classMenuOpen = !classMenuOpen)}>
+        クラス管理
+      </div>
+
+
+      {#if classMenuOpen}
+        <div class="submenu">
+          {#if classMenu.length === 0}
+            <div class="menu-item child">クラス分けがまだされていません</div>
+          {:else}
+            {#each classMenu as item}
+              <a class="menu-item child" href={item.page} data-sveltekit-preload-data>
+                {item.name}
+              </a>
+            {/each}
+          {/if}
+        </div>
+      {/if}
+
 
       {#each mainMenu as item}
         <a class="menu-item" href={item.page} data-sveltekit-preload-data>
