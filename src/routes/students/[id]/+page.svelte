@@ -343,6 +343,27 @@
     }
   }
 
+  async function uploadPhoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await apiFetch(`/upload_photo/${student.id}`, {
+        method: "POST",
+        body: formData
+      });
+
+      // Atualiza a foto exibida adicionando um timestamp para evitar cache
+      student.photo = res.filename;
+      student = { ...student };
+    } catch (e) {
+      alert("写真のアップロードに失敗しました");
+    }
+  }
+
 
   onMount(async () => {
     try {
@@ -361,6 +382,10 @@
 {:else if error}
   <p style="color:red">{error}</p>
 {:else if student}
+
+<a href={"/students/" + student.id + "/edit"}>
+  <button class="edit-btn">編集</button>
+</a>
 
 <div class="container">
   <div class="left">
@@ -443,6 +468,16 @@
           <td>{student.guardian1_kana}</td>
         </tr>
         <tr>
+          <th>父</th>
+          <td>{student.father || "-"}</td>
+        </tr>
+        
+        <tr>
+          <th>母</th>
+          <td>{student.mother || "-"}</td>
+        </tr>
+        
+        <tr>
           <th>保護者住所</th>
           <td>{student.guardian_address}</td>
         </tr>
@@ -478,6 +513,21 @@
         <div class="no-photo">写真なし</div>
       {/if}
     </div>
+
+    <div class="photo-actions">
+      <input
+        id="photoInput"
+        type="file"
+        accept="image/*"
+        style="display:none"
+        on:change={uploadPhoto}
+      />
+
+      <button on:click={() => document.getElementById('photoInput').click()}>
+        写真を変更
+      </button>
+    </div>
+    
 
     <table class="info-table">
       <tbody>
@@ -516,9 +566,6 @@
     <button class="danger" on:click={() => showReturnPassword = true}>復学する</button>
     {/if}
 
-    <a href={"/students/" + student.id + "/edit"}>
-      <button class="edit-btn">編集</button>
-    </a>
     
 
     <h3>休学履歴</h3>
@@ -784,7 +831,7 @@
   .photo-box img {
     width: 200px;
     border: 1px solid #ccc;
-    margin-bottom: 20px;
+    margin-bottom: 5px;
   }
 
   .no-photo {
@@ -853,4 +900,14 @@
   .history-table th {
     background: #f0f0f0;
   }
+
+  .photo-actions {
+    margin-bottom: 20px;
+  }
+
+  .photo-actions button {
+    margin-top: 2px;
+    padding: 6px 12px;
+  }
+
 </style>

@@ -12,13 +12,11 @@
   let id;
   $: id = $page.params.id;
 
-  let photoFile = null;
-  let photoUrl = null;
 
   console.log("BASE:", import.meta.env.VITE_API_BASE);
 
   // -------------------------------
-  // 生徒データ取得
+  // 生徒データ取得 
   // -------------------------------
   function normalizeDateForInput(d) {
     if (!d) return "";
@@ -36,7 +34,6 @@
     // Normaliza datas sem dia para o input
     student.junior_high_grad_date = normalizeDateForInput(student.junior_high_grad_date);
 
-      await loadPhoto();
     } catch (e) {
       error = "生徒データの取得に失敗しました";
       console.error(e);
@@ -44,34 +41,7 @@
     loading = false;
   });
 
-  // -------------------------------
-  // 写真読み込み（TOKEN付き）
-  // -------------------------------
-  async function loadPhoto() {
-    if (!student?.photo) {
-      photoUrl = null;
-      return;
-    }
-
-    try {
-      const res = await fetch(`http://${window.location.hostname}:8000/photos/${student.photo}`);
-
-
-      if (!res.ok) {
-        console.error("写真読み込み失敗:", res.status);
-        photoUrl = null;
-        return;
-      }
-
-      const blob = await res.blob();
-      photoUrl = URL.createObjectURL(blob);
-
-    } catch (e) {
-      console.error("写真読み込み失敗:", e);
-      photoUrl = null;
-    }
-  }
-
+  
   // -------------------------------
   // 保存処理
   // -------------------------------
@@ -80,23 +50,6 @@
     success = "";
 
     try {
-      // 写真アップロード（もし選択されていれば）
-      if (photoFile) {
-        const formData = new FormData();
-        formData.append("file", photoFile);
-
-        const uploadData = await apiFetch(
-          `/upload_photo/${id}`,
-          {
-            method: "POST",
-            body: formData
-          }
-        );
-
-        student.photo = uploadData.filename;
-        student = { ...student };
-        await loadPhoto();
-      }
 
       // 生徒データ保存（PUT）
       await apiFetch(`/api/students/${id}`, {
@@ -183,6 +136,15 @@
 
         <tr><th>保護者氏名</th><td><input bind:value={student.guardian1}></td></tr>
         <tr><th>保護者ふりがな</th><td><input bind:value={student.guardian1_kana}></td></tr>
+        <tr>
+          <th>父</th>
+          <td><input bind:value={student.father}></td>
+        </tr>
+        
+        <tr>
+          <th>母</th>
+          <td><input bind:value={student.mother}></td>
+        </tr>
         <tr><th>保護者住所</th><td><input bind:value={student.guardian_address}></td></tr>
 
         <tr>
@@ -214,17 +176,6 @@
 
   <!-- 右カラム：写真＋学籍情報（編集不可） -->
   <div class="right">
-
-    <div class="photo-box">
-      {#if photoUrl}
-        <img src={photoUrl} alt="顔写真">
-      {:else}
-        <div class="no-photo">写真なし</div>
-      {/if}
-    </div>
-
-    <!-- 写真だけ編集可能 -->
-    <input type="file" accept="image/*" on:change={(e) => photoFile = e.target.files[0]}>
 
     <table class="info-table">
       <tbody>
@@ -272,24 +223,6 @@
     background: #f7f7f7;
     font-weight: bold;
     vertical-align: top;
-  }
-
-  .photo-box img {
-    width: 170px;
-    height: auto;
-    border: 1px solid #ccc;
-    margin-bottom: 20px;
-  }
-
-  .no-photo {
-    width: 170px;
-    height: 200px;
-    background: #eee;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-    border: 1px solid #ccc;
   }
 
   .save-btn {
