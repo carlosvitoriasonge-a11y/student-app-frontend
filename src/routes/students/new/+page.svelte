@@ -22,6 +22,8 @@
   let guardian1 = "";
   let guardian1_kana = "";
   let guardian_address = "";
+  let father = ""; 
+  let mother = "";
   let emergency1 = "";
   let emergency2 = "";
   let emergency1label = "";
@@ -57,6 +59,8 @@
       guardian1,
       guardian1_kana,
       guardian_address,
+      father,
+      mother,
       emergency1,
       emergency2,
       emergency1label,
@@ -97,6 +101,8 @@
       guardian1 = "";
       guardian1_kana = "";
       guardian_address = "";
+      father = "";
+      mother = "";
       emergency1 = "";
       emergency2 = "";
       emergency1label = "";
@@ -182,6 +188,8 @@
     <label>保護者名１：<input bind:value={guardian1} /></label>
     <label>保護者名１ふりがな：<input bind:value={guardian1_kana} /></label>
     <label>保護者住所：<input bind:value={guardian_address} /></label>
+    <label>父：<input bind:value={father} /></label>
+    <label>母：<input bind:value={mother} /></label>
 
     <label>緊急連絡先①：<input bind:value={emergency1} /></label>
     <label>緊急連絡先①ラベル：<input bind:value={emergency1label} /></label>
