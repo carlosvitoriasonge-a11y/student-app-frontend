@@ -1,14 +1,22 @@
 <script>
+  import { goto } from '$app/navigation';
   export let data;
 
   $: course = data.course;
   $: grade = data.grade;
   $: className = data.className;
   $: students = data.students;
+  
+
 </script>
 
   
   <h1>{course} {grade}年 {className}</h1>
+
+  <button class="seat-button" on:click={() => goto(`/class/${course}/${grade}/${className}/seating`)}
+  >座席表を見る
+  </button>
+  
   
   {#if students.length === 0}
     <p>このクラスには生徒がいません。</p>
@@ -73,5 +81,21 @@
     a:hover {
       text-decoration: underline;
     }
+
+    .seat-button {
+  display: inline-block;
+  margin: 1rem 0;
+  padding: 8px 14px;
+  background: #0070f3;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.seat-button:hover {
+  background: #0059c9;
+}
+
   </style>
   

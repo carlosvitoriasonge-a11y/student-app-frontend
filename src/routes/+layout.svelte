@@ -5,9 +5,21 @@
   import { onMount } from "svelte";
   import ServerStatus from "$lib/ServerStatus.svelte";
   import { goto } from "$app/navigation";
+  import { apiFetch } from "$lib/api";
+  import { on } from "svelte/events";
+
 
   // dados vindos do +layout.js
   export let data;
+
+  export function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  }
+
 
   // -------------------------------
   // LOGOUT POR INATIVIDADE
@@ -143,6 +155,39 @@ onMount(() => {
   }
 });
 
+let now = new Date();
+
+function toWareki(date) {
+  const y =date.getFullYear();
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+
+  const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+  const weekday = weekdays[date.getDay()];
+
+  let era = "";
+  let eraYear = y;
+
+  if (y >= 2019) {
+    era = "令和";
+    eraYear = y - 2018;
+  } else if (y >= 1989) {
+    era = "平成";
+    eraYear = y - 1988;
+  } else if (y >= 1926) {
+    era = "昭和";
+    eraYear = y - 1925;
+  } 
+
+  return `${y}年（${era}${eraYear}年）${m}月${d}日（${weekday}）`;
+}
+
+onMount(() => {
+  setInterval(() => {
+    now = new Date();
+  }, 1000); // atualiza a cada minuto
+});
+
 </script>
 
 <div class="app-container">
@@ -151,6 +196,10 @@ onMount(() => {
 
     <div class="title">英心高等学校　生徒管理アプリ</div>
     <ServerStatus />
+    <div class="clock">
+      {toWareki(now)} {now.toLocaleTimeString("ja-JP")}
+    </div>
+    
 
     <div class="user-area">
       <span>管理者</span>
@@ -219,6 +268,11 @@ onMount(() => {
       <slot />
     </section>
   </div>
+
+  <div class="fullscreen-fab" on:click={toggleFullscreen}>
+    ⛶
+  </div>
+  
 </div>
 
 <style>
@@ -339,4 +393,38 @@ onMount(() => {
   .child {
     font-size: 0.95rem;
   }
+
+  .clock {
+    font-size: 14px; 
+    margin-left: 20px; 
+    margin-right: 20px; 
+    white-space: nowrap; 
+    flex-shrink: 0;
+  }
+
+  .fullscreen-fab {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #007aff;
+  color: white;
+  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  z-index: 9999;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s ease;
+}
+
+.fullscreen-fab:active {
+  transform: scale(0.92);
+}
+
+
 </style>

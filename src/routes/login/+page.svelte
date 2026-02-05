@@ -25,6 +25,7 @@
 
     window.location.href = "/home";
   }
+
 </script>
 
 <h1>ログイン</h1>
