@@ -51,6 +51,9 @@ export async function load({ params, fetch }) {
     );
     
     const statsJson = await statsRes.json();
+
+    console.log('statsJson >>>', statsJson);
+
     
     return {
         course,
@@ -63,7 +66,8 @@ export async function load({ params, fetch }) {
         classStats: statsJson.stats,
 
         // 🔥 ESTATÍSTICA POR ALUNO
-        studentStats: statsJson.student_stats
+        studentStats: statsJson.student_stats,
+        dailyAttendance: statsJson.dailyAttendance
     };
 }
 
