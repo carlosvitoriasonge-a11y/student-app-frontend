@@ -53,9 +53,9 @@
   
   <h1>（{course}） {grade}年 {className} {#if classStatusToday}
     <span style="font-size: 0.8em; margin-left: 10px;">
-      　　　　　　現在の出欠状況：
-      出席：{present} 人　
-      欠席：{absent} 人
+      　　　　　　現在の生徒状況：
+      いる生徒：{present} 人　
+      いない生徒：{absent} 人
     </span>
   {/if}
 </h1>
