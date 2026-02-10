@@ -17,11 +17,11 @@
   });
 
   // DAILY ATTENDANCE
-  const daily = data.dailyAttendance;
-  const today = new Date().toISOString().slice(0, 10);
+  $: daily = data.dailyAttendance;
+  $: today = new Date().toISOString().slice(0, 10);
 
   // Status do dia
-  const classStatusToday = daily?.[today] ?? null;
+  $: classStatusToday = daily?.[today] ?? null;
 
   // Cálculo de presentes e ausentes
   function computeCurrentStatus(statuses) {
@@ -41,7 +41,7 @@
     return { present, absent };
   }
 
-  const { present, absent } = computeCurrentStatus(classStatusToday);
+  $: ({ present, absent } = computeCurrentStatus(classStatusToday));
 
   console.log("DAILY >>>", daily);
   console.log("HOJE >>>", today);
@@ -51,12 +51,20 @@
 
 
   
-  <h1>（{course}） {grade}年 {className} {#if classStatusToday}
+  <h1>（{course}） {grade}年 {className}
+    
+    {#if classStatusToday}
     <span style="font-size: 0.8em; margin-left: 10px;">
-      　　　　　　現在の生徒状況：
+      　　　　現在の生徒状況：
       いる生徒：{present} 人　
       いない生徒：{absent} 人
     </span>
+
+    {:else}
+    <span style="font-size: 0.8em; margin-left: 10px; color: black;">
+      　　　　（本日の出席はまだ記録されていません。）
+    </span>
+
   {/if}
 </h1>
 

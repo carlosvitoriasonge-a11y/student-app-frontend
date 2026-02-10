@@ -4,7 +4,7 @@
   import { browser } from "$app/environment";
   import { onMount } from "svelte";
   import ServerStatus from "$lib/ServerStatus.svelte";
-  import { goto } from "$app/navigation";
+  import { goto, invalidateAll } from "$app/navigation";
   import { apiFetch } from "$lib/api";
   import { on } from "svelte/events";
 
@@ -188,6 +188,10 @@ onMount(() => {
   }, 1000); // atualiza a cada minuto
 });
 
+async function changeClass(url) {
+  await goto(url);
+  await invalidateAll();
+}
 </script>
 
 <div class="app-container">
@@ -247,11 +251,16 @@ onMount(() => {
           {#if classMenu.length === 0}
             <div class="menu-item child">クラス分けがまだされていません</div>
           {:else}
-            {#each classMenu as item}
-              <a class="menu-item child" href={item.page} data-sveltekit-preload-data>
-                {item.name}
-              </a>
-            {/each}
+          {#each classMenu as item}
+          <a
+            class="menu-item child"
+            href="#"
+            on:click={(e) => { e.preventDefault(); changeClass(item.page); }}
+          >
+            {item.name}
+          </a>
+        {/each}
+        
           {/if}
         </div>
       {/if}
