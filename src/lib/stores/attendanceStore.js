@@ -7,7 +7,6 @@ const UNRECORDED = "未記録";
 
 
 const HR_CYCLE = [
-  UNRECORDED,
   "出席",
   "欠席",
   "遅刻",
@@ -403,6 +402,8 @@ function createAttendanceStore() {
       return s;
     });
 
+
+
     const payload = {
       date: snapshot.date,
       classes: {
@@ -464,6 +465,24 @@ function createAttendanceStore() {
     }
   }
 
+  function resetDay() {
+    const state = get(store);
+  
+    const updated = {};
+    for (const sid of Object.keys(state.students || {})) {
+      updated[sid] = UNRECORDED;
+    }
+  
+    store.update(s => ({
+      ...s,
+      students: updated,
+      dirty: true
+    }));
+  
+    updateCountsInStore();
+  }
+  
+
   
 
   return {
@@ -475,8 +494,11 @@ function createAttendanceStore() {
     showPhoto,
     hidePhoto,
     save,
-    setFixedLayout
+    setFixedLayout,
+    resetDay
   };
+
+
 }
 
 export const attendanceStore = createAttendanceStore();

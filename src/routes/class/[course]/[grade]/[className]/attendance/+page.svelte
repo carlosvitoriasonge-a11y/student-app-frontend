@@ -5,6 +5,8 @@
   export let params;
   import { apiFetch } from "$lib/api.js";
 
+
+
   let attendance;
   let gridKey;
 
@@ -144,6 +146,8 @@ $: {
     }
   }
 
+  function resetStatus(studentId) { updateStatus(studentId, "未記録"); }
+
   /* =========================
      TEACHER VIEW SEMPRE
      ========================= */
@@ -263,6 +267,11 @@ $: {
 <div class="header-info">
   <span class="subtitle">{classLabel}</span>
   <button class="save-btn" style="margin-top:0px;" disabled={!attendance?.dirty} on:click={() => attendanceStore.save()}>保存</button>
+  <button class="reset" on:click={() => attendanceStore.resetDay()}>
+    リセット
+  </button>
+  
+  
   
 </div>
 </div>
