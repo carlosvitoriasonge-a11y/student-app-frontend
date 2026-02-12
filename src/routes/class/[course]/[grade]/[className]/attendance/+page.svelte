@@ -104,11 +104,12 @@ $: {
       const pref = prefRes?.json ? await prefRes.json() : prefRes;
 
       const p =pref?.preferred_layout
-      if (p === "auto" || p === "custom") {
+      if (["auto", "custom", "A", "B", "C"].includes(p)) {
         preferred = p;
       } else {
         preferred = "auto";
       }
+
     } catch (err) {
       console.error("Erro ao carregar preferência:", err);
       preferred = "auto";
@@ -177,15 +178,16 @@ $: {
     gap:20px; 
     align-items:flex-start; 
     height: 100vh;
-    overflow: hidden;
+    overflow: visible;
   }
-  .main-area { 
-    flex:1 1 auto; 
-    min-width:0; 
-    overflow: hidden;
-  }
+  .main-area {
+  flex: 0 0 auto;     /* ← NÃO encolhe, NÃO cresce, tamanho natural */
+  height: 100%; /* ← scroll horizontal se precisar */
+  overflow-y: auto;   /* ← scroll vertical se precisar */
+}
+
   .aside-area { 
-    width:320px; 
+    width:250px; 
     max-width:35%; 
     min-width:240px; 
     border-left:1px solid #eee; 
@@ -199,20 +201,31 @@ $: {
   display: grid;
   gap: 6px;
   margin-top: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  overflow: hidden;
+
+  grid-template-columns: repeat(var(--cols), minmax(70px, 1fr));
+  grid-auto-rows: minmax(70px, auto);
+
+  align-items: stretch;
 }
 
 
-  .seat { 
-    padding:8px; 
-    border-radius:6px; 
-    text-align:center; 
-    min-height:70px; 
-    display:flex; 
-    flex-direction:column; 
-    justify-content:center; 
-    user-select:none; }
+
+
+
+  .seat {
+  
+  min-height: 70px;
+  padding: 8px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  border-radius: 6px;
+  text-align: center;
+  overflow: hidden;
+  }
+
 
   .inactive { background:#ddd; color:#666; }
   .teacher-desk { margin-top:12px; font-weight:700; text-align:center; }
@@ -221,11 +234,17 @@ $: {
   .student-item { padding:8px; border-radius:6px; background:#fafafa; border:1px solid #eee; }
   .no-photo-text { width:120px; height:120px; display:flex; align-items:center; justify-content:center; background:#f3f4f6; color:#6b7280; border-radius:6px; text-align:center; padding:8px; font-size:14px; line-height:1.2; }
   .seat-name {
-  font-size: clamp(0.70rem, 1.2vw, 1.00rem);
-  text-align: center;
-  overflow-wrap: break-word;
   line-height: 1.1;
-  }
+  word-break: break-word;
+  overflow: hidden;
+
+  font-size: clamp(0.55rem, 1.2vw, 0.95rem);
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
 
   .header-row { 
     display: flex; 
@@ -257,19 +276,28 @@ $: {
 <div class="layout-switch">
   <button on:click={() => switchLayout("auto")} disabled={attendance?.layout === "auto"}>出席番号順</button>
   <button on:click={() => switchLayout("custom")} disabled={attendance?.layout === "custom"}>カスタム</button>
+  <button on:click={() => switchLayout("A")} disabled={attendance?.layout === "A"}>A</button>
+  <button on:click={() => switchLayout("B")} disabled={attendance?.layout === "B"}>B</button>
+  <button on:click={() => switchLayout("C")} disabled={attendance?.layout === "C"}>C</button>
 </div>
+
+
 
 <div class="layout-switch">
   <button on:click={() => attendanceStore.setFixedLayout("auto")}>出席番号順に固定</button>
   <button on:click={() => attendanceStore.setFixedLayout("custom")}>カスタムに固定</button>
+  <button on:click={() => attendanceStore.setFixedLayout("A")}>Aに固定</button>
+  <button on:click={() => attendanceStore.setFixedLayout("B")}>Bに固定</button>
+  <button on:click={() => attendanceStore.setFixedLayout("C")}>Cに固定</button>
 </div>
 
 <div class="header-info">
-  <span class="subtitle">{classLabel}</span>
-  <button class="save-btn" style="margin-top:0px;" disabled={!attendance?.dirty} on:click={() => attendanceStore.save()}>保存</button>
   <button class="reset" on:click={() => attendanceStore.resetDay()}>
     リセット
   </button>
+  <span class="subtitle">{classLabel}</span>
+  <button class="save-btn" style="margin-top:0px;" disabled={!attendance?.dirty} on:click={() => attendanceStore.save()}>保存</button>
+  
   
   
   
@@ -286,42 +314,53 @@ $: {
       key ={gridKey}
       style={`grid-template-columns: repeat(${layoutCols}, 1fr); grid-auto-rows: minmax(70px, auto);`}>
       {#each Array(layoutRows) as _, r}
-      {#each Array(layoutCols) as _, c}
-        {@const seat = seatAt(r, c)}
-            <div style={`grid-column: ${c + 1}; grid-row: ${r + 1};`}>
-              {#if seat !== null}
-                {#if seat?.student_id}
-                <div
-                  class="seat"
-                  style="
-                    background-color: {statusColor(attendance?.students?.[String(seat.student_id)] ?? '未記録')};
-                    color: {statusTextColor(attendance?.students?.[String(seat.student_id)] ?? '未記録')};
-                  "
-                  on:click={() => { if (!longPressTriggered) attendanceStore.setStatus(String(seat.student_id)); }}
-                  on:pointerdown={() => startLongPress(seat.student_id)}
-                  on:pointerup={endLongPress}
-                  on:pointerleave={endLongPress}
-                >
-              
-                    {#if getStudent(seat.student_id)}
-                      <div class="seat-name">
-                        {getStudent(seat.student_id).name}
-                      </div>
-                      <div style="font-size:12px; color:#555">{getStudent(seat.student_id).kana}</div>
-                    {/if}
-                    <div style="margin-top:6px; font-size:13px;">
-                      {attendance?.students?.[String(seat.student_id)] ?? '未記録'}
-                    </div>
-                  </div>
-                {:else}
-                  <div class="seat inactive">空席</div>
-                {/if}
-              {:else}
-                <div class="seat inactive">×</div>
-              {/if}
+  {#each Array(layoutCols) as _, c}
+    {@const seat = seatAt(r, c)}
+    <div style={`grid-column: ${c + 1}; grid-row: ${r + 1};`}>
+
+      {#if seat !== null}
+
+        {#if seat?.student_id}
+          <!-- SEAT COM ALUNO -->
+          <div
+            class="seat"
+            style="
+              background-color: {statusColor(attendance?.students?.[String(seat.student_id)] ?? '未記録')};
+              color: {statusTextColor(attendance?.students?.[String(seat.student_id)] ?? '未記録')};
+            "
+            on:click={() => { if (!longPressTriggered) attendanceStore.setStatus(String(seat.student_id)); }}
+            on:pointerdown={() => startLongPress(seat.student_id)}
+            on:pointerup={endLongPress}
+            on:pointerleave={endLongPress}
+          >
+            {#if getStudent(seat.student_id)}
+              <div class="seat-name">{getStudent(seat.student_id).name}</div>
+              <div style="font-size:12px; color:#555">{getStudent(seat.student_id).kana}</div>
+            {/if}
+
+            <div style="margin-top:6px; font-size:13px;">
+              {attendance?.students?.[String(seat.student_id)] ?? '未記録'}
             </div>
-          {/each}
-        {/each}
+          </div>
+
+        {:else}
+          <!-- SEAT VAZIO (空席) -->
+          <div class="seat inactive">
+            <div class="seat-name">空席</div>
+          </div>
+        {/if}
+
+      {:else}
+        <!-- SEAT BLOQUEADO (×) -->
+        <div class="seat inactive">
+          <div class="seat-name">×</div>
+        </div>
+      {/if}
+
+    </div>
+  {/each}
+{/each}
+
       </div>
 
       <div class="teacher-desk">教卓</div>
@@ -337,7 +376,7 @@ $: {
 
     {#if attendance?.studentsInfo && attendance.studentsInfo.length > 0}
       <ul class="student-list">
-        {#each attendance.studentsInfo as student}
+        {#each attendance.studentsInfo.filter(s => s.status !== "休学") as student}
           {@const sid = String(student.id ?? student.student_id ?? "")}
           {@const allocated = (attendance?.seats || []).some(seat => String(seat?.student_id ?? "") === sid)}
 
