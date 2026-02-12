@@ -24,7 +24,6 @@
     subjects = [...subjects];
     }
 
-    $: years = [1, 2, 3];
     const UNIVERSAL_SUBJECTS = ["探究"];
 
     $: availableTeachers = teachers.filter(t => {
