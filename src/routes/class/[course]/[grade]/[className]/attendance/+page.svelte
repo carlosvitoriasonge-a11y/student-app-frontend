@@ -183,7 +183,8 @@ $: {
   .main-area {
   flex: 0 0 auto;     /* ← NÃO encolhe, NÃO cresce, tamanho natural */
   height: 100%; /* ← scroll horizontal se precisar */
-  overflow-y: auto;   /* ← scroll vertical se precisar */
+  overflow-y: auto; 
+  max-width: 1000px;  /* ← scroll vertical se precisar */
 }
 
   .aside-area { 
@@ -203,19 +204,28 @@ $: {
   margin-top: 16px;
 
   grid-template-columns: repeat(var(--cols), minmax(70px, 1fr));
-  grid-auto-rows: minmax(70px, auto);
+  grid-auto-rows: 70px;
 
   align-items: stretch;
 }
+
+    .grid-item {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    }
+
 
 
 
 
 
   .seat {
-  
+  max-height: 70px;
   min-height: 70px;
-  padding: 8px;
+  min-width: 150px;
+  max-width: 150px;
+  padding: 4px 6px;
 
   display: flex;
   flex-direction: column;
@@ -234,11 +244,11 @@ $: {
   .student-item { padding:8px; border-radius:6px; background:#fafafa; border:1px solid #eee; }
   .no-photo-text { width:120px; height:120px; display:flex; align-items:center; justify-content:center; background:#f3f4f6; color:#6b7280; border-radius:6px; text-align:center; padding:8px; font-size:14px; line-height:1.2; }
   .seat-name {
-  line-height: 1.1;
+    line-height: 1.05;
   word-break: break-word;
   overflow: hidden;
 
-  font-size: clamp(0.55rem, 1.2vw, 0.95rem);
+  font-size: clamp(0.45rem, 3cqw, 0.85rem);
 
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -261,6 +271,17 @@ $: {
 
   .seat.unrecorded { 
     background: #ccc; color: #333; border: 1px dashed #666; }
+
+    .seat-kana {
+  font-size: 12px;
+  color: #555;
+  line-height: 1.0;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 
 
 
@@ -312,7 +333,7 @@ $: {
     {#key gridKey}
       <div class="grid"  
       key ={gridKey}
-      style={`grid-template-columns: repeat(${layoutCols}, 1fr); grid-auto-rows: minmax(70px, auto);`}>
+      style={`grid-template-columns: repeat(${layoutCols}, 1fr); grid-auto-rows: minmax(70px,auto);`}>
       {#each Array(layoutRows) as _, r}
   {#each Array(layoutCols) as _, c}
     {@const seat = seatAt(r, c)}
@@ -335,7 +356,7 @@ $: {
           >
             {#if getStudent(seat.student_id)}
               <div class="seat-name">{getStudent(seat.student_id).name}</div>
-              <div style="font-size:12px; color:#555">{getStudent(seat.student_id).kana}</div>
+              <div class="seat-kana">{getStudent(seat.student_id).kana}</div>
             {/if}
 
             <div style="margin-top:6px; font-size:13px;">
