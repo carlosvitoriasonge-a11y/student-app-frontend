@@ -131,7 +131,8 @@
 
 
   let mainMenu = [
-    { name: "教員管理", page: "/teachers" },
+    { name: "教員管理", page: "/admin/teachers" },
+    { name: "教科管理", page: "/admin/subjects" },
     { name: "設定", page: "/settings" }
   ];
 

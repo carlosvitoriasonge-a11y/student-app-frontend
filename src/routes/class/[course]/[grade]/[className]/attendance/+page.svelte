@@ -369,7 +369,19 @@ $: {
 </div>
 
 {#if photoStudent}
-  <div class="photo-bubble" style="position:fixed; top:20%; left:50%; transform:translateX(-50%); background:white; padding:12px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:999; text-align:center;">
+  <div class="photo-bubble"
+       style="
+         position: absolute;
+         top: 20%;
+         left: 50%;
+         background: white;
+         padding: 12px;
+         border-radius: 8px;
+         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+         z-index: 999;
+         text-align: center;
+         pointer-events:none;
+       ">
     {#if (photoStudent.photo ?? photoStudent.avatar ?? photoStudent.image)}
       <img
         src={

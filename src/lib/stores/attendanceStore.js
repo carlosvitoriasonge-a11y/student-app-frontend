@@ -7,6 +7,7 @@ const UNRECORDED = "未記録";
 
 
 const HR_CYCLE = [
+  UNRECORDED,
   "出席",
   "欠席",
   "遅刻",
