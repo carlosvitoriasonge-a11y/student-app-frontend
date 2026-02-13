@@ -119,11 +119,8 @@ $: {
     await attendanceStore.loadSeating(localClassId, preferred);
   }
 
-  onMount(() => {
-    setTimeout(() => {
-      init();
-    }, 0);
-  });
+  onMount(init);
+
 
 
 
