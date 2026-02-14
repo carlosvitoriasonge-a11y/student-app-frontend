@@ -12,19 +12,21 @@
     const GOOGLE_CLIENT_ID = "404733269225-o1lmoqrgk3nnlkh6oedarn8eh9opvuiv.apps.googleusercontent.com"; // <-- coloque o seu aqui
 
     function loginWithGoogle() {
-        const redirect = "http://localhost:5173/google/callback";
+    const redirect = import.meta.env.DEV
+        ? "http://localhost:5173/google/callback"
+        : "https://student-app-frontend.pages.dev/google/callback";
 
-        const url =
-            "https://accounts.google.com/o/oauth2/v2/auth" +
-            `?client_id=${GOOGLE_CLIENT_ID}` +
-            `&redirect_uri=${redirect}` +
-            "&response_type=code" +
-            "&scope=https://www.googleapis.com/auth/calendar.readonly" +
-            "&access_type=offline" +
-            "&prompt=consent";
+    const url =
+        "https://accounts.google.com/o/oauth2/v2/auth" +
+        `?client_id=${GOOGLE_CLIENT_ID}` +
+        `&redirect_uri=${redirect}` +
+        "&response_type=code" +
+        "&scope=https://www.googleapis.com/auth/calendar.readonly" +
+        "&access_type=offline" +
+        "&prompt=consent";
 
-        window.location.href = url;
-    }
+    window.location.href = url;
+}
 
     onMount(async () => {
         googleToken = localStorage.getItem("google_access_token");
