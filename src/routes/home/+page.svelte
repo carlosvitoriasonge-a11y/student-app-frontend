@@ -56,11 +56,6 @@
     {#if !googleToken}
         <p style="color: gray;">Google にログインすると予定が表示されます。</p>
 
-        <!-- ⭐ BOTÃO DE LOGIN DO GOOGLE -->
-        <button on:click={loginWithGoogle}
-            style="margin-top: 10px; padding: 8px 14px; cursor: pointer;">
-            Google にログイン
-        </button>
 
     {:else if events.length === 0}
         <p>今日は予定がありません。</p>

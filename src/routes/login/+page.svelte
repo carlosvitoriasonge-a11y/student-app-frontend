@@ -5,7 +5,6 @@
 
   const base = `http://${window.location.hostname}:8000`;
 
-
   async function login() {
     error = "";
 
@@ -26,6 +25,26 @@
     window.location.href = "/home";
   }
 
+  // ⭐ GOOGLE LOGIN
+  const GOOGLE_CLIENT_ID =
+    "404733269225-o1lmoqrgk3nnlkh6oedarn8eh9opvuiv.apps.googleusercontent.com";
+
+  function loginWithGoogle() {
+    const redirect = import.meta.env.DEV
+      ? "http://localhost:5173/google/callback"
+      : "https://student-app-frontend.pages.dev/google/callback";
+
+    const url =
+      "https://accounts.google.com/o/oauth2/v2/auth" +
+      `?client_id=${GOOGLE_CLIENT_ID}` +
+      `&redirect_uri=${redirect}` +
+      "&response_type=code" +
+      "&scope=https://www.googleapis.com/auth/calendar.readonly" +
+      "&access_type=offline" +
+      "&prompt=consent";
+
+    window.location.href = url;
+  }
 </script>
 
 <h1>ログイン</h1>
@@ -45,3 +64,11 @@
 <input placeholder="パスワード" type="password" bind:value={password} />
 
 <button on:click={login}>ログイン</button>
+
+<!-- ⭐ BOTÃO DE LOGIN DO GOOGLE -->
+<button
+  on:click={loginWithGoogle}
+  style="margin-top: 10px; padding: 8px 14px; cursor: pointer;"
+>
+  Google にログイン
+</button>
