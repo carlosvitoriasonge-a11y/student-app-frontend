@@ -30,7 +30,10 @@
   const defaultRows = 5;
   const defaultCols = 6; 
 
-  let today = new Date().toISOString().slice(0, 10);
+ 
+  let today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD sem UTC
+
+
 
   let layoutRows = defaultRows;
   let layoutCols = defaultCols;

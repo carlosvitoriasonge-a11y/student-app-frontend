@@ -73,49 +73,30 @@
     return c;
   };
 
-  $: if (data?.allStudents) {
-    const set = new Set();
+  $: if (data?.classList) {
+  classMenu = data.classList.map((c) => ({
+    course: c.course,
+    grade: Number(c.grade),
+    className: c.class_name,
+    name: `${courseLabel(c.course)} ${c.grade}年 ${c.class_name}`,
+    page: `/class/${c.course}/${c.grade}/${c.class_name}`
+  }));
 
-    for (const s of data.allStudents) {
-      const className = String(s.class_name || "").trim();
-      if (!className) continue;
+  const courseOrder = { "全": 1, "水": 2, "集": 3 };
 
-      const key = `${s.course}-${s.grade}-${className}`;
-      set.add(key);
-    }
+  classMenu.sort((a, b) => {
+    const courseDiff = courseOrder[a.course] - courseOrder[b.course];
+    if (courseDiff !== 0) return courseDiff;
 
-    
+    const gradeDiff = a.grade - b.grade;
+    if (gradeDiff !== 0) return gradeDiff;
 
-    classMenu = Array.from(set).map((key) => {
-      const [course, grade, className] = key.split("-");
-      return {
-        course,
-        grade: Number(grade),
-        className,
-        name: `${courseLabel(course)} ${grade}年 ${className}`,
-        page: `/class/${course}/${grade}/${className}`
-      };
-    });
+    return a.className.localeCompare(b.className, "ja");
+  });
+}
 
-    // ordenar por curso, depois por série, depois por nome da classe
-    const courseOrder = { 
-      "全": 1, 
-      "水": 2, 
-      "集": 3 
-    };
-    
-    classMenu.sort((a, b) => {
-      const courseDiff = (courseOrder[a.course] - courseOrder[b.course]);
-      if (courseDiff !== 0) return courseDiff;
 
-      const gradeDiff = a.grade - b.grade;
-      if (gradeDiff !== 0) return gradeDiff;
-
-      return a.className.localeCompare(b.className, "ja");
-
-    });
-
-  }
+  
   // -------------------------------
   // SIDEBAR RETRÁTIL (sempre)
   // -------------------------------

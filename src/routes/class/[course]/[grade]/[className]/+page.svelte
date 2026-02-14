@@ -7,10 +7,12 @@
   $: grade = data.grade;
   $: className = data.className;
   $: students = data.students;
+
   $: studentStats = data.studentStats;
+  $: activeStudents = students.filter(s => s.status !== "休学");
 
   // Ordenação
-  $: sortedStudents = [...students].sort((a, b) => {
+  $: sortedStudents = [...activeStudents].sort((a, b) => {
     const na = Number(String(a.attend_no).replace(/\D/g, ""));
     const nb = Number(String(b.attend_no).replace(/\D/g, ""));
     return na - nb;
@@ -18,7 +20,9 @@
 
   // DAILY ATTENDANCE
   $: daily = data.dailyAttendance;
-  $: today = new Date().toISOString().slice(0, 10);
+  $: today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
+
+
 
   // Status do dia
   $: classStatusToday = daily?.[today] ?? null;

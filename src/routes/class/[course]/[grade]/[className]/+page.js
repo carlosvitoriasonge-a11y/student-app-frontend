@@ -8,66 +8,66 @@ export async function load({ params, fetch }) {
     const grade = params.grade;
     const className = params.className;
 
+    // ============================================
+    // 1) TOKEN (somente no navegador)
+    // ============================================
     const token = typeof window !== 'undefined'
         ? localStorage.getItem('access_token')
         : null;
 
-    // Buscar todos os alunos
-    const res = await fetch('/api/students/', {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    });
+    // ============================================
+    // 2) DATA CORRETA (RECALCULADA SEMPRE)
+    // ============================================
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
 
-    const allStudents = await res.json();
+    // ============================================
+    // 3) ANO LETIVO
+    // ============================================
+    const schoolYear = schoolYearFromDate(today);
 
-    // Filtrar só os alunos dessa turma
-    const students = allStudents.filter((s) => {
-        if (!s.class_name || s.class_name === '') return false;
-
-        return (
-            s.course === course &&
-            String(s.grade) === String(grade) &&
-            s.class_name === className
-        );
-    });
-
-    if (students.length === 0) {
+    // ============================================
+    // 4) BUSCAR ALUNOS DA TURMA (SEM /api/students/)
+    // ============================================
+    const studentsRes = await fetch(
+        `/api/students/by_class?course=${course}&grade=${grade}&class_name=${encodeURIComponent(className)}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+    );
+    
+    if (!studentsRes.ok) {
         throw error(404, 'このクラスには生徒がいません');
     }
 
-    // Calcular ano letivo
-    const today = new Date().toISOString().slice(0, 10);
-    const schoolYear = schoolYearFromDate(today);
+    const students = await studentsRes.json();
 
-    // 🔥 PASSO 3: BUSCAR ESTATÍSTICAS POR ALUNO
+    if (!students || students.length === 0) {
+        throw error(404, 'このクラスには生徒がいません');
+    }
+
+    // ============================================
+    // 5) BUSCAR ESTATÍSTICAS DE PRESENÇA
+    // ============================================
     const statsRes = await fetch(
-      `/api/attendance/stats?course=${course}&grade=${grade}&class_name=${className}&school_year=${schoolYear}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
+        `/api/attendance/stats?course=${course}&grade=${grade}&class_name=${encodeURIComponent(className)}&school_year=${schoolYear}`,
+        {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
         }
-      }
     );
-    
+
     const statsJson = await statsRes.json();
+    console.log("statsJson >>>", statsJson);
 
-    console.log('statsJson >>>', statsJson);
-
-    
     return {
         course,
         grade,
         className,
-        students,
+        today,          // ← AQUI! A DATA CORRETA VAI PARA O SVELTE
         schoolYear,
-
-        // 🔥 ESTATÍSTICA DA TURMA
+        students,
         classStats: statsJson.stats,
-
-        // 🔥 ESTATÍSTICA POR ALUNO
         studentStats: statsJson.student_stats,
         dailyAttendance: statsJson.dailyAttendance
     };
 }
-

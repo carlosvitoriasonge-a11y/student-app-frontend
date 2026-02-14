@@ -1,28 +1,24 @@
 export const ssr = false;
-import { redirect } from '@sveltejs/kit';
 
-export async function load({ url, fetch }) {
-  const token = localStorage.getItem('access_token');
-  console.log("TOKEN:", token);
+import { redirect } from '@sveltejs/kit';
+import { apiFetch } from '$lib/api';
+
+export async function load({ url }) {
+  const token = typeof localStorage !== "undefined"
+    ? localStorage.getItem("access_token")
+    : null;
 
   if (!token && url.pathname !== '/login') {
     throw redirect(302, '/login');
   }
 
-  const res = await fetch('/api/students/', {
-    headers: {
-      Authorization:  `Bearer ${token}`  // ← sem Bearer
-    }
-  });
+  let classList = [];
 
-  console.log("STATUS:", res.status);
-
-  if (!res.ok) {
-    return { allStudents: [] };
+  try {
+    classList = await apiFetch('/api/classes'); // ✔ sem .json()
+  } catch (err) {
+    console.error("Erro ao carregar classes:", err);
   }
 
-  const allStudents = await res.json();
-  console.log("STUDENTS:", allStudents);
-
-  return { allStudents };
+  return { classList };
 }

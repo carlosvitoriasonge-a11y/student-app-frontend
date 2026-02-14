@@ -17,9 +17,11 @@
   let error = "";
 
   function extractYear(str) {
-    if (!str) return null;
-    return Number(str.replace("年度", ""));
+  if (!str) return null;
+  const m = str.match(/^(\d{4})年度/);
+  return m ? Number(m[1]) : null;
   }
+
 
   async function loadGraduates() {
     loading = true;
@@ -29,8 +31,9 @@
       const yearSet = new Set(
         graduates
           .map(g => extractYear(g.graduated_year))
-          .filter(y => !isNaN(y))
-      );
+          .filter(y => y !== null && !isNaN(y))
+        );
+
 
       years = Array.from(yearSet).sort((a, b) => b - a);
 
