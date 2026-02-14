@@ -221,10 +221,10 @@ $: {
 
 
   .seat {
-  max-height: 70px;
-  min-height: 70px;
-  min-width: 150px;
-  max-width: 150px;
+  max-height: 100px;
+  min-height: 110px;
+  min-width: 100px;
+  max-width: 100px;
   padding: 4px 6px;
 
   display: flex;

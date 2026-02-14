@@ -23,6 +23,23 @@
     }
   });
 
+  // -----------------------------
+// AJUSTE DINÂMICO DO AUTO/CUSTOM (máximo 35)
+// -----------------------------
+$: if (students.length > 0) {
+  const total = Math.min(students.length, 35); // limite máximo 35
+
+  const rows = baseRows; // 5 linhas fixas
+
+  // calcula colunas necessárias, mas nunca menos que 6
+  baseCols = Math.max(6, Math.ceil(total / rows));
+
+  // recria grids auto/custom com o novo tamanho
+  autoSeats = defaultGrid();
+  customSeats = defaultGrid();
+}
+
+
   
   // mock de alunos (depois vem do backend)
   let baseRows = 5;
