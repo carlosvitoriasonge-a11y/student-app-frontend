@@ -4,6 +4,12 @@ import { redirect } from '@sveltejs/kit';
 import { apiFetch } from '$lib/api';
 
 export async function load({ url }) {
+
+  // 0) NÃO rodar nada na página de callback do Google
+  if (url.pathname.startsWith('/google/callback')) {
+    return {};
+  }
+
   // 1) Se estiver na página de login, NÃO roda nada
   if (url.pathname === '/login') {
     return {};

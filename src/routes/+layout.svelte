@@ -180,7 +180,10 @@ async function changeClass(url) {
   <header class="header">
     <button class="menu-toggle" on:click={toggleSidebar}>☰</button>
 
-    <div class="title">英心高等学校　生徒管理アプリ</div>
+    <div class="title" on:click={() => goto('/home')} style="cursor:pointer;">
+      英心高等学校　生徒管理アプリ
+    </div>
+    
     <ServerStatus />
     <div class="clock">
       {toWareki(now)} {now.toLocaleTimeString("ja-JP")}

@@ -1,6 +1,8 @@
 <script>
   import { onMount } from "svelte";
   import { apiFetch } from "$lib/api";
+  import { goto } from "$app/navigation";
+
 
   let students = [];
 
@@ -174,6 +176,10 @@
 
   <button on:click={startWizard}>
     昇級処理を開始
+  </button>
+
+  <button on:click={() => goto('/promote/grad_in_sep')}>
+    9月卒業処理へ（特別）
   </button>
 {/if}
 
