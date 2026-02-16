@@ -4,16 +4,8 @@ import { goto } from "$app/navigation";
 export async function apiFetch(url, options = {}, responseType = "json") {
   if (!options.headers) options.headers = {};
 
-  let base = "";
+  const base = `http://${window.location.hostname}:8000`;
 
-  // Se estiver rodando na rede da escola (IP privado ou localhost), usa o backend direto
-  if (
-    window.location.hostname.startsWith("192.168.") ||
-    window.location.hostname.startsWith("10.") ||
-    window.location.hostname === "localhost"
-  ) {
-    base = `http://${window.location.hostname}:8000`;
-  }
 
 
   // Token

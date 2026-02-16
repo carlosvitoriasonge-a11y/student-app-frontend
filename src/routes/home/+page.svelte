@@ -48,34 +48,3 @@
     ☆教務の先生へ：　今年は9月卒業の生徒がいれば、９月中に卒業処理をしてください。☆
   </p>
 {/if}
-
-<!-- ⭐ AQUI: BLOCO DO GOOGLE CALENDAR -->
-<div style="margin-top: 25px;">
-    <h2>今日の予定</h2>
-
-    {#if !googleToken}
-        <p style="color: gray;">Google にログインすると予定が表示されます。</p>
-
-
-    {:else if events.length === 0}
-        <p>今日は予定がありません。</p>
-
-    {:else}
-        <ul>
-            {#each events as event}
-                <li style="margin-bottom: 10px;">
-                    <strong>{event.summary}</strong><br>
-                    {new Date(event.start).toLocaleTimeString('ja-JP', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    })}
-                    〜
-                    {new Date(event.end).toLocaleTimeString('ja-JP', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    })}
-                </li>
-            {/each}
-        </ul>
-    {/if}
-</div>

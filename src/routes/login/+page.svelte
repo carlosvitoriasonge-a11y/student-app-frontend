@@ -65,10 +65,3 @@
 
 <button on:click={login}>ログイン</button>
 
-<!-- ⭐ BOTÃO DE LOGIN DO GOOGLE -->
-<button
-  on:click={loginWithGoogle}
-  style="margin-top: 10px; padding: 8px 14px; cursor: pointer;"
->
-  Google にログイン
-</button>
