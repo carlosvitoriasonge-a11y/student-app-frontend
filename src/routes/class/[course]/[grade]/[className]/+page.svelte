@@ -51,6 +51,9 @@
   console.log("HOJE >>>", today);
   console.log("STATUS HOJE >>>", classStatusToday);
   console.log("PRESENTES:", present, "AUSENTES:", absent);
+
+
+
 </script>
 
 
@@ -81,6 +84,21 @@
   on:click={() => goto(`/class/${course}/${grade}/${className}/attendance`)}
   >HRの出欠を記録する
   </button>
+
+  <button
+  class="attendance-sub-button"
+  on:click={() => goto(`/class/${course}/${grade}/${className}/attendance_sub`)}
+>
+  授業の出欠を記録する
+</button>
+
+<button
+class="week-attend-button"
+on:click={() => goto(`/class/${course}/${grade}/${className}/week_attend`)}
+>
+出席簿を見る
+</button>
+
 
   
   
@@ -192,6 +210,8 @@
    
   {/if}
   
+ 
+
 <style>
   /* ============================
      COLUNAS ESPECIAIS
@@ -405,7 +425,7 @@
    BOTÕES
 ============================ */
 
-  .seat-button, .attendance-button { 
+  .seat-button, .attendance-button{ 
   display: inline-block; 
   padding: 8px 14px; 
   border-radius: 6px; 
@@ -415,11 +435,41 @@
   margin: 1rem 0; 
   } 
 
+.attendance-sub-button { 
+  display: inline-block; 
+  padding: 8px 14px; 
+  border-radius: 6px; 
+  text-decoration: none; 
+  font-weight: 600; 
+  color: green; 
+  margin: 1rem 0; 
+  } 
+
+.week-attend-button {
+  display: inline-block; 
+  padding: 8px 14px; 
+  border-radius: 6px; 
+  text-decoration: none; 
+  font-weight: 600; 
+  color: red; 
+  margin: 1rem 0; 
+  } 
+
+
+
   .seat-button { background: #0070f3; }
   .seat-button:hover { background: #0059c9; }
 
   .attendance-button { background: #28a745; margin-left: 1rem; }
   .attendance-button:hover { background: #1e7e34; }
+
+  .attendance-sub-button { background:rgb(242, 255, 0); margin-left: 1rem; }
+  .attendance-sub-button:hover { background:rgb(149, 172, 5); }
+
+  .week-attend-button { background:rgb(255, 255, 255); margin-left: 1rem; }
+  .week-attend-button:hover { background:rgb(154, 154, 154); }
+
+
   /* Centralização correta para texto vertical */
   .compact-col,
   .vertical-header {
@@ -449,10 +499,4 @@
   background: #f2f2f2;
 }
 
-
-
-
-  
-
 </style>
-  

@@ -341,7 +341,7 @@ $: {
 
       {#if seat !== null}
 
-        {#if seat?.student_id}
+      {#if seat?.student_id && getStudent(seat.student_id)?.status !== "休学"}
           <!-- SEAT COM ALUNO -->
           <div
             class="seat"
@@ -377,6 +377,7 @@ $: {
           <div class="seat-name">×</div>
         </div>
       {/if}
+
 
     </div>
   {/each}
