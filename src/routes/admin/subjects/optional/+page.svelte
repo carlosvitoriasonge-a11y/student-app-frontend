@@ -110,7 +110,7 @@
                 credits: 0,
                 required_attendance: 0,
                 required_reports: 0,
-                type: "required",
+                type: "optional",
                 grade: 1,
                 course: "全",
                 teacher_ids: []
@@ -130,7 +130,7 @@
         credits: 0,
         required_attendance: 0,
         required_reports: 0,
-        type: "required",
+        type: "optional",
         grade: 1,
         course: "",
         teacher_ids: []
