@@ -1,262 +1,235 @@
 <script>
-    export const ssr = false;
-  
-    import { onMount } from "svelte";
-    import { attendanceStore, parseClassId, formatClassLabel } from "$lib/stores/attendanceStore.js";
-    import { apiFetch } from "$lib/api.js";
-    import { attendanceSubStore } from "$lib/stores/attendanceSubStore.js";
+  export const ssr = false;
 
-  
-    export let params;
-  
-    // ==========================
-    // PARÂMETROS DA ROTA
-    // ==========================
-    const course = params.course;
-    const grade = params.grade;
-    const className = params.className;
-  
-    const localClassId = `${course}-${grade}-${className}`;
-    const { class_name } = parseClassId(localClassId);
-    const classLabel = formatClassLabel({ course, grade, class_name });
-  
-    // ==========================
-    // ESTADO GLOBAL (HR / SEATING)
-    // ==========================
-// ==========================
-// ESTADO GLOBAL
-// ==========================
-let attendance;          // HR: alunos, foto, etc.
-let sub;                 // SUB: seating
-let gridKey;
-let saveMessage = "";
-let saveTimer = null;
+  import { onMount } from "svelte";
+  import { attendanceStore, parseClassId, formatClassLabel } from "$lib/stores/attendanceStore.js";
+  import { apiFetch } from "$lib/api.js";
+  import { attendanceSubStore } from "$lib/stores/attendanceSubStore.js";
 
+  export let params;
 
-$: attendance = $attendanceStore;
-$: sub = $attendanceSubStore;
+  // ==========================
+  // PARÂMETROS DA ROTA
+  // ==========================
+  const course = params.course;
+  const grade = params.grade;
+  const className = params.className;
 
-$: gridKey = sub?.layout + "-" + JSON.stringify(sub?.seats);
-$: console.log("SEATING SUB:", sub?.seats);
+  const localClassId = `${course}-${grade}-${className}`;
+  const { class_name } = parseClassId(localClassId);
+  const classLabel = formatClassLabel({ course, grade, class_name });
 
-const defaultRows = 5;
-const defaultCols = 6;
+  // ==========================
+  // ESTADO GLOBAL
+  // ==========================
+  let attendance;
+  let sub;
+  let gridKey;
+  let saveMessage = "";
+  let saveTimer = null;
 
-let layoutRows = defaultRows;
-let layoutCols = defaultCols;
+  $: attendance = $attendanceStore;
+  $: sub = $attendanceSubStore;
 
-$: {
-  if (sub?.seats && sub.seats.length > 0) {
-    layoutRows = Math.max(...sub.seats.map(s => Number(s.row))) || defaultRows;
-    layoutCols = Math.max(...sub.seats.map(s => Number(s.col))) || defaultCols;
-  } else {
-    layoutRows = defaultRows;
-    layoutCols = defaultCols;
+  $: gridKey = sub?.layout + "-" + JSON.stringify(sub?.seats);
+  $: console.log("SEATING SUB:", sub?.seats);
+
+  const defaultRows = 5;
+  const defaultCols = 6;
+
+  let layoutRows = defaultRows;
+  let layoutCols = defaultCols;
+
+  $: {
+    if (sub?.seats && sub.seats.length > 0) {
+      layoutRows = Math.max(...sub.seats.map(s => Number(s.row))) || defaultRows;
+      layoutCols = Math.max(...sub.seats.map(s => Number(s.col))) || defaultCols;
+    } else {
+      layoutRows = defaultRows;
+      layoutCols = defaultCols;
+    }
   }
-}
 
-  
-    // ==========================
-    // DATA / PERÍODO / SUBJECT
-    // ==========================
-    let today = new Date().toLocaleDateString("sv-SE"); // YYYY-MM-DD
-    let selectedPeriod = "";
-    let subject = "";
-    // ==========================
-    // SUBJECT MODAL (2 níveis)
-    // ==========================
-    let showSubjectModal = false;
-    let subjects = [];
-    let subjectGroups = {};
-    let selectedName = null;
+  // ==========================
+  // DATA / PERÍODO / SUBJECT
+  // ==========================
+  let today = new Date().toLocaleDateString("sv-SE");
+  let selectedPeriod = "";
+  let subject = "";
 
-  
-    // periodsData: { "１限目": { subject, students: { id: status } } }
-    let periodsData = {};
-    let studentsStatus = {}; // mapa do período atual: { id: status }
-  
-    // ==========================
-    // DEFINIÇÃO DE PERÍODOS
-    // ==========================
-    function getPeriodsForCourse(course) {
-        if (course === "水") {
-            return [
-                { name: "１限目", start: "16:10", end: "17:05" },
-                { name: "２限目", start: "17:10", end: "18:05" },
-                { name: "３限目", start: "18:10", end: "19:05" }
-            ];
-        }
+  // ==========================
+  // SUBJECT MODAL
+  // ==========================
+  let showSubjectModal = false;
+  let subjects = [];
+  let subjectGroups = {};
+  let selectedName = null;
 
-        return [
-                { name: "１限目", start: "09:15", end: "10:05" },
-                { name: "２限目", start: "10:10", end: "11:00" },
-                { name: "３限目", start: "11:05", end: "11:55" },
-                { name: "４限目", start: "12:00", end: "12:55" },
-                { name: "５限目", start: "13:20", end: "14:010" },
-                { name: "６限目", start: "14:15", end: "15:05" }
-        ];
-    }
+  // periodsData: { "１限目": { subject, students: { id: status } } }
+  let periodsData = {};
+  let studentsStatus = {};
 
-const PERIODS = getPeriodsForCourse(course);
-
-  
-    function detectCurrentPeriod() {
-        const now = new Date();
-        const current = now.getHours() * 60 + now.getMinutes();
-
-        for (const p of PERIODS) {
-            const [sh, sm] = p.start.split(":").map(Number);
-            const [eh, em] = p.end.split(":").map(Number);
-
-            const startMin = sh * 60 + sm;
-            const endMin = eh * 60 + em;
-
-            if (current >= startMin && current <= endMin) {
-                return p.name;
-            }
-        }
-
-        return "";
-    }
-
-  
-    // ==========================
-    // LONG PRESS / FOTO (igual HR)
-    // ==========================
-    let timer = null;
-    let longPressTriggered = false;
-  
-    function startLongPress(studentId) {
-      if (!studentId) return;
-      longPressTriggered = false;
-      timer = setTimeout(() => {
-        longPressTriggered = true;
-        attendanceStore.showPhoto(String(studentId));
-      }, 500);
-    }
-  
-    function endLongPress() {
-      clearTimeout(timer);
-      if (longPressTriggered) {
-        setTimeout(() => {
-          longPressTriggered = false;
-          attendanceStore.hidePhoto();
-        }, 100);
-      } else {
-        attendanceStore.hidePhoto();
+  // ==========================
+  // DEFINIÇÃO DE PERÍODOS
+  // ==========================
+  function getPeriodsForCourse(course) {
+      if (course === "水") {
+          return [
+              { name: "１限目", start: "16:10", end: "17:05" },
+              { name: "２限目", start: "17:10", end: "18:05" },
+              { name: "３限目", start: "18:10", end: "19:05" }
+          ];
       }
-    }
-  
-    function getStudent(id) {
-      const sid = String(id ?? "");
-      return (attendance?.studentsInfo || []).find(
-        s => sid === String(s.id ?? s.student_id)
-      );
-    }
-  
-    $: photoStudent =
-      attendance?.showPhoto
-        ? getStudent(attendance.showPhoto)
-        : null;
-  
-    // ==========================
-    // STATUS / CORES (attendance_sub)
-    // ==========================
-    const STATUS_ORDER = [
-      "未記録",
-      "出席",
-      "欠席",
-      "遅刻",
-      "怠学・居眠り",
-      "忘れ物"
-    ];
-  
-    function statusColor(status) {
-      switch (status) {
-        case "未記録": return "#cccccc";
-        case "出席": return "#A7F3D0";
-        case "欠席": return "#FCA5A5";
-        case "遅刻": return "#FDE68A";
-        case "怠学・居眠り": return "#DC2626"; // vermelho forte, limpo
-        case "忘れ物": return "#BFDBFE";
-        default: return "#E5E7EB";
-      }
-    }
-  
-    function statusTextColor(status) {
-      return "#222";
-    }
-  
-    function cycleStatus(current) {
-      const idx = STATUS_ORDER.indexOf(current ?? "未記録");
-      const next = STATUS_ORDER[(idx + 1) % STATUS_ORDER.length];
-      return next;
-    }
-  
-    function setStatus(studentId) {
-      const sid = String(studentId);
-      const current = studentsStatus[sid] ?? "未記録";
-      const next = cycleStatus(current);
-      studentsStatus = { ...studentsStatus, [sid]: next };
-    }
-  
-    // ==========================
-    // GRID / SEATING (igual HR)
-    // ==========================
-    function seatAt(r, c) {
-  const seats = sub?.seats || [];
-  const found = seats.find(
-    s => Number(s.row) - 1 === r && Number(s.col) - 1 === c
-  );
-  return found ?? null;
-}
 
-  
-    // ==========================
-    // CARREGAR DADOS DO DIA
-    // ==========================
-    async function loadDay() {
-      const res = await apiFetch(
-        `/api/attendance_sub?date=${today}&course=${encodeURIComponent(course)}&grade=${encodeURIComponent(
-          grade
-        )}&class_name=${encodeURIComponent(className)}`
-      );
-  
-      const classId = `${course}-${grade}-${className}`;
-      const dayData = res?.classes?.[classId]?.[today] || {};
-  
-      periodsData = dayData;
-  
-      // Se já temos um período selecionado, recarrega dados dele
-      if (selectedPeriod && periodsData[selectedPeriod]) {
-        subject = periodsData[selectedPeriod].subject || "";
-        studentsStatus = { ...(periodsData[selectedPeriod].students || {}) };
-      } else {
-        // Se a data é hoje, tenta detectar período atual
-        const todayStr = new Date().toLocaleDateString("sv-SE");
-        if (today === todayStr) {
-          const autoPeriod = detectCurrentPeriod();
-          if (autoPeriod) {
-            selectedPeriod = autoPeriod;
+      return [
+          { name: "１限目", start: "09:15", end: "10:05" },
+          { name: "２限目", start: "10:10", end: "11:00" },
+          { name: "３限目", start: "11:05", end: "11:55" },
+          { name: "４限目", start: "12:00", end: "12:55" },
+          { name: "５限目", start: "13:20", end: "14:010" },
+          { name: "６限目", start: "14:15", end: "15:05" }
+      ];
+  }
+
+  const PERIODS = getPeriodsForCourse(course);
+
+  function detectCurrentPeriod() {
+      const now = new Date();
+      const current = now.getHours() * 60 + now.getMinutes();
+
+      for (const p of PERIODS) {
+          const [sh, sm] = p.start.split(":").map(Number);
+          const [eh, em] = p.end.split(":").map(Number);
+
+          const startMin = sh * 60 + sm;
+          const endMin = eh * 60 + em;
+
+          if (current >= startMin && current <= endMin) {
+              return p.name;
           }
-        }
-  
-        if (selectedPeriod && periodsData[selectedPeriod]) {
-          subject = periodsData[selectedPeriod].subject || "";
-          studentsStatus = { ...(periodsData[selectedPeriod].students || {}) };
-        } else {
-          // sem dados ainda → limpa
-          subject = "";
-          studentsStatus = {};
+      }
+
+      return "";
+  }
+
+  // ==========================
+  // LONG PRESS / FOTO
+  // ==========================
+  let timer = null;
+  let longPressTriggered = false;
+
+  function startLongPress(studentId) {
+    if (!studentId) return;
+    longPressTriggered = false;
+    timer = setTimeout(() => {
+      longPressTriggered = true;
+      attendanceStore.showPhoto(String(studentId));
+    }, 500);
+  }
+
+  function endLongPress() {
+    clearTimeout(timer);
+    if (longPressTriggered) {
+      setTimeout(() => {
+        longPressTriggered = false;
+        attendanceStore.hidePhoto();
+      }, 100);
+    } else {
+      attendanceStore.hidePhoto();
+    }
+  }
+
+  function getStudent(id) {
+    const sid = String(id ?? "");
+    return (attendance?.studentsInfo || []).find(
+      s => sid === String(s.id ?? s.student_id)
+    );
+  }
+
+  $: photoStudent =
+    attendance?.showPhoto
+      ? getStudent(attendance.showPhoto)
+      : null;
+
+  // ==========================
+  // STATUS / CORES
+  // ==========================
+  const STATUS_ORDER = [
+    "未記録",
+    "出席",
+    "欠席",
+    "遅刻",
+    "怠学・居眠り",
+    "忘れ物"
+  ];
+
+  function statusColor(status) {
+    switch (status) {
+      case "未記録": return "#cccccc";
+      case "出席": return "#A7F3D0";
+      case "欠席": return "#FCA5A5";
+      case "遅刻": return "#FDE68A";
+      case "怠学・居眠り": return "#DC2626";
+      case "忘れ物": return "#A97458";
+      default: return "#E5E7EB";
+    }
+  }
+
+  function statusTextColor(status) {
+    return "#222";
+  }
+
+  function cycleStatus(current) {
+    const idx = STATUS_ORDER.indexOf(current ?? "未記録");
+    const next = STATUS_ORDER[(idx + 1) % STATUS_ORDER.length];
+    return next;
+  }
+
+  function setStatus(studentId) {
+    const sid = String(studentId);
+    const current = studentsStatus[sid] ?? "未記録";
+    const next = cycleStatus(current);
+    studentsStatus = { ...studentsStatus, [sid]: next };
+  }
+
+  // ==========================
+  // GRID / SEATING
+  // ==========================
+  function seatAt(r, c) {
+    const seats = sub?.seats || [];
+    const found = seats.find(
+      s => Number(s.row) - 1 === r && Number(s.col) - 1 === c
+    );
+    return found ?? null;
+  }
+
+  // ==========================
+  // CARREGAR DADOS DO DIA
+  // ==========================
+  async function loadDay() {
+    const res = await apiFetch(
+      `/api/attendance_sub?date=${today}&course=${encodeURIComponent(course)}&grade=${encodeURIComponent(
+        grade
+      )}&class_name=${encodeURIComponent(className)}`
+    );
+
+    const classId = `${course}-${grade}-${className}`;
+    const dayData = res?.classes?.[classId]?.[today] || {};
+
+    periodsData = dayData;
+
+    if (selectedPeriod && periodsData[selectedPeriod]) {
+      subject = periodsData[selectedPeriod].subject || "";
+      studentsStatus = { ...(periodsData[selectedPeriod].students || {}) };
+    } else {
+      const todayStr = new Date().toLocaleDateString("sv-SE");
+      if (today === todayStr) {
+        const autoPeriod = detectCurrentPeriod();
+        if (autoPeriod) {
+          selectedPeriod = autoPeriod;
         }
       }
-    }
-  
-    function onDateChange() {
-      loadDay();
-    }
-  
-    function onPeriodChange() {
+
       if (selectedPeriod && periodsData[selectedPeriod]) {
         subject = periodsData[selectedPeriod].subject || "";
         studentsStatus = { ...(periodsData[selectedPeriod].students || {}) };
@@ -265,99 +238,139 @@ const PERIODS = getPeriodsForCourse(course);
         studentsStatus = {};
       }
     }
-
-  
-    // ==========================
-    // SALVAR PERÍODO
-    // ==========================
-    async function savePeriod() {
-      if (!selectedPeriod) {
-        alert("時限を選択してください。");
-        return;
-      }
-      if (!subject) {
-        alert("科目を入力してください。");
-        return;
-      }
-
-      const payload = {
-        date: today,
-        period: selectedPeriod,
-        subject,
-        classes: {
-          [`${course}-${grade}-${className}`]: {
-            students: studentsStatus
-          }
-        }
-      };
-
-      await apiFetch("/api/attendance_sub/save", {
-        method: "POST",
-        body: JSON.stringify(payload)
-      });
-
-      // FEEDBACK
-      saveMessage = "保存しました。";
-      clearTimeout(saveTimer);
-      saveTimer = setTimeout(() => saveMessage = "", 1500);
-
-      await loadDay();
-    }
-
-    // ==========================
-    // INIT
-    // ==========================
-  async function init() {
-  await attendanceStore.loadStudents(localClassId);
-
-  // seating preference
-  let preferred = "auto";
-  try {
-    const prefRes = await apiFetch(
-      `/api/seating/preference?course=${course}&grade=${grade}&class_name=${className}`
-    );
-    const pref = prefRes?.json ? await prefRes.json() : prefRes;
-    if (["auto", "custom", "A", "B", "C"].includes(pref?.preferred_layout)) {
-      preferred = pref.preferred_layout;
-    }
-  } catch {}
-
-  await attendanceSubStore.loadSeatingMaps(localClassId, preferred);
-
-  await loadDay();
-}
-
-async function openSubjectModal() {
-  showSubjectModal = true;
-  selectedName = null;
-
-  const res = await apiFetch(
-    `/api/subjects?course=${course}&grade=${grade}`
-  );
-
-  const data = res?.json ? await res.json() : res;
-
-  subjects = Array.isArray(data) ? data : [];
-
-  // AGRUPAR POR name
-  subjectGroups = {};
-  for (const s of subjects) {
-    if (!subjectGroups[s.name]) subjectGroups[s.name] = [];
-    subjectGroups[s.name].push(s);
   }
-}
 
-function selectSubject(s) {
-  subject = s.subject_group;  // ← agora é único
-  selectedName = null;
-  showSubjectModal = false;
-}
+  function onDateChange() {
+    loadDay();
+  }
 
+  function onPeriodChange() {
+    if (selectedPeriod && periodsData[selectedPeriod]) {
+      subject = periodsData[selectedPeriod].subject || "";
+      studentsStatus = { ...(periodsData[selectedPeriod].students || {}) };
+    } else {
+      subject = "";
+      studentsStatus = {};
+    }
+  }
 
-  
+  // ==========================
+  // SALVAR PERÍODO
+  // ==========================
+  async function savePeriod() {
+    if (!selectedPeriod) {
+      alert("時限を選択してください。");
+      return;
+    }
+    if (!subject) {
+      alert("科目を入力してください。");
+      return;
+    }
 
+    const payload = {
+      date: today,
+      period: selectedPeriod,
+      subject,
+      classes: {
+        [`${course}-${grade}-${className}`]: {
+          students: studentsStatus
+        }
+      }
+    };
 
+    await apiFetch("/api/attendance_sub/save", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
 
+    saveMessage = "保存しました。";
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => saveMessage = "", 1500);
+
+    await loadDay();
+  }
+
+  // ==========================
+  // INIT
+  // ==========================
+  async function init() {
+    await attendanceStore.loadStudents(localClassId);
+
+    let preferred = "auto";
+    try {
+      const prefRes = await apiFetch(
+        `/api/seating/preference?course=${course}&grade=${grade}&class_name=${className}`
+      );
+      const pref = prefRes?.json ? await prefRes.json() : prefRes;
+      if (["auto", "custom", "A", "B", "C"].includes(pref?.preferred_layout)) {
+        preferred = pref.preferred_layout;
+      }
+    } catch {}
+
+    await attendanceSubStore.loadSeatingMaps(localClassId, preferred);
+
+    await loadDay();
+  }
+
+  // ==========================
+  // ORDEM DE MATÉRIAS (REUTILIZADA)
+  // ==========================
+  const SUBJECT_ORDER = [
+    "国語",
+    "公民",
+    "地理歴史",
+    "数学",
+    "理科",
+    "英語",
+    "保健体育",
+    "芸術",
+    "家庭",
+    "情報",
+    "総合探究"
+  ];
+
+  function sortSubjects(list) {
+    return [...list].sort((a, b) => {
+      const aMain = SUBJECT_ORDER.indexOf(a.name);
+      const bMain = SUBJECT_ORDER.indexOf(b.name);
+
+      if (aMain !== bMain) return aMain - bMain;
+
+      return a.subject_group.localeCompare(b.subject_group, "ja");
+    });
+  }
+
+  // ==========================
+  // MODAL DE MATÉRIAS
+  // ==========================
+  async function openSubjectModal() {
+    showSubjectModal = true;
+    selectedName = null;
+
+    const res = await apiFetch(
+      `/api/subjects?course=${course}&grade=${grade}`
+    );
+
+    const data = res?.json ? await res.json() : res;
+
+    subjects = Array.isArray(data) ? data : [];
+
+    // ORDENAR AQUI
+    subjects = sortSubjects(subjects);
+
+    // AGRUPAR POR name
+    subjectGroups = {};
+    for (const s of subjects) {
+      if (!subjectGroups[s.name]) subjectGroups[s.name] = [];
+      subjectGroups[s.name].push(s);
+    }
+  }
+
+  function selectSubject(s) {
+    subject = s.subject_group;
+    selectedName = null;
+    showSubjectModal = false;
+  }
   
     onMount(init);
   </script>
