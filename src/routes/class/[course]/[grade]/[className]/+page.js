@@ -13,7 +13,7 @@ export async function load({ params, fetch }) {
         : null;
 
     // Buscar todos os alunos
-    const res = await fetch('/api/students/', {
+    const res = await fetch(`/api/students/by_class?course=${course}&grade=${grade}&class_name=${className}`, {
         headers: {
             Authorization: `Bearer ${token}`
         }
