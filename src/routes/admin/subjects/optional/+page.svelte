@@ -132,7 +132,7 @@
         required_reports: 0,
         type: "optional",
         grade: 1,
-        course: "",
+        course: "全",
         teacher_ids: []
     };
 
@@ -276,6 +276,14 @@ function sortSubjects(list) {
             <option value="3">3年</option>
         </select>
 
+        <label>コース</label>
+        <select bind:value={form.course}>
+            <option value="全">全</option>
+            <option value="水">水</option>
+            <option value="集">集</option>
+        </select>
+
+
 
         <label>担当教員</label>
         <select bind:value={form.teacher_ids} multiple>
@@ -311,6 +319,14 @@ function sortSubjects(list) {
                 <option value="2">2年</option>
                 <option value="3">3年</option>
             </select>
+
+            <label>コース</label>
+            <select bind:value={editForm.course}>
+                <option value="全">全</option>
+                <option value="水">水</option>
+                <option value="集">集</option>
+            </select>
+
 
 
             <label>担当教員</label>
