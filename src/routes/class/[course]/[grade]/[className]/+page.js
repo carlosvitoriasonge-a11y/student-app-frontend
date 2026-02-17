@@ -42,7 +42,7 @@ export async function load({ params, fetch }) {
 
     // 🔥 PASSO 3: BUSCAR ESTATÍSTICAS POR ALUNO
     const statsRes = await fetch(
-      `/api/attendance/stats?course=${course}&grade=${grade}&class_name=${className}&school_year=${schoolYear}`,
+      `/api/attendance_stats/stats?course=${course}&grade=${grade}&class_name=${className}&school_year=${schoolYear}`,
       {
         headers: {
           Authorization: `Bearer ${token}`
