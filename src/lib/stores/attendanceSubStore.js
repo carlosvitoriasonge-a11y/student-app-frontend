@@ -30,9 +30,28 @@ function createAttendanceSubStore() {
     const seating = res?.json ? await res.json() : res;
     console.log("BACKEND SEATING:", seating);
 
+    // 1) pega o layout escolhido
+    let selectedLayout = seating[preferred] || [];
 
-    // seating = { auto: [...], custom: [...], A: [...], B: [...], C: [...] }
+    // 2) normaliza student_id
+    let normalizedSeats = selectedLayout.map(seat => ({
+      ...seat,
+      student_id: seat?.student_id != null ? String(seat.student_id) : seat.student_id
+    }));
 
+    // ⭐⭐⭐ 3) ESPELHAMENTO — IGUAL AO HR ⭐⭐⭐
+    if (normalizedSeats.length > 0) {
+      const maxRow = Math.max(...normalizedSeats.map(s => Number(s.row)));
+      const maxCol = Math.max(...normalizedSeats.map(s => Number(s.col)));
+
+      normalizedSeats = normalizedSeats.map(s => ({
+        ...s,
+        row: maxRow - (Number(s.row) - 1),
+        col: maxCol - (Number(s.col) - 1)
+      }));
+    }
+
+    // 4) salva no store
     store.update(s => ({
       ...s,
       classId,
@@ -44,7 +63,7 @@ function createAttendanceSubStore() {
         C: seating.C || []
       },
       layout: preferred,
-      seats: seating[preferred] || []
+      seats: normalizedSeats
     }));
   }
 
@@ -52,11 +71,33 @@ function createAttendanceSubStore() {
   // SWITCH LAYOUT (auto/custom/A/B/C)
   // ============================================================
   function setLayout(layout) {
-    store.update(s => ({
-      ...s,
-      layout,
-      seats: s.seatingMaps[layout] || []
-    }));
+    store.update(s => {
+      let selected = s.seatingMaps[layout] || [];
+
+      // normaliza
+      let normalized = selected.map(seat => ({
+        ...seat,
+        student_id: seat?.student_id != null ? String(seat.student_id) : seat.student_id
+      }));
+
+      // ⭐⭐⭐ aplicar espelhamento igual ao HR ⭐⭐⭐
+      if (normalized.length > 0) {
+        const maxRow = Math.max(...normalized.map(s => Number(s.row)));
+        const maxCol = Math.max(...normalized.map(s => Number(s.col)));
+
+        normalized = normalized.map(s => ({
+          ...s,
+          row: maxRow - (Number(s.row) - 1),
+          col: maxCol - (Number(s.col) - 1)
+        }));
+      }
+
+      return {
+        ...s,
+        layout,
+        seats: normalized
+      };
+    });
   }
 
   return {
