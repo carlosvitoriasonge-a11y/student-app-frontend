@@ -98,7 +98,7 @@
             });
 
                     // pega o subject completo
-            const full = await apiFetch(`/api/subjects/${created.id}`);
+            const full = await apiFetch(`/api/subjects/${newSubject.id}`);
 
             subjects = [...subjects, newSubject];
             showCreateModal = false;
