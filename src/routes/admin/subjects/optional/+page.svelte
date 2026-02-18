@@ -113,7 +113,8 @@
                 type: "optional",
                 grade: 1,
                 course: "全",
-                teacher_ids: []
+                teacher_ids: [],
+                exam_frequency: "0"
             };
 
         } catch (err) {
@@ -133,13 +134,16 @@
         type: "optional",
         grade: 1,
         course: "全",
-        teacher_ids: []
+        teacher_ids: [],
+        exam_frequency: "0"
     };
 
 
     function startEdit(subject) {
         editForm = structuredClone(subject);
         if (!editForm.grade) editForm.grade = 1;
+        if (!editForm.exam_frequency) editForm.exam_frequency = "0";
+
         showEditModal = true;
        
 
@@ -295,6 +299,14 @@ function sortSubjects(list) {
                 <option value={t.id}>{t.name}</option>
             {/each}
         </select>
+
+        <label>試験回数</label>
+        <select bind:value={form.exam_frequency}>
+            <option value="4">年4回</option>
+            <option value="1">年1回</option>
+            <option value="0">試験なし</option>
+        </select>
+
         
     
 
@@ -339,8 +351,15 @@ function sortSubjects(list) {
             {#each availableTeachers as t}
                 <option value={t.id}>{t.name}</option>
             {/each}
-        </select>
+            </select>
             
+            <label>試験回数</label>
+            <select bind:value={editForm.exam_frequency}>
+                <option value="4">年4回</option>
+                <option value="1">年1回</option>
+                <option value="0">試験なし</option>
+            </select>
+        
 
 
             <button type="submit">保存</button>

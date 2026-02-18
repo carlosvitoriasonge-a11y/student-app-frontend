@@ -282,6 +282,16 @@ $: {
   text-overflow: ellipsis;
 }
 
+.grid, .grid *, .seat, .seat * {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+
+    touch-action: manipulation;
+}
+
+
 
 
 
