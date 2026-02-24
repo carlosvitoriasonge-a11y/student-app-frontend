@@ -56,6 +56,7 @@
   let today = new Date().toLocaleDateString("sv-SE");
   let selectedPeriod = "";
   let subject = "";
+  let examFrequency = null;   // <── ADICIONADO
 
   // ==========================
   // SUBJECT MODAL
@@ -220,6 +221,7 @@
 
     if (selectedPeriod && periodsData[selectedPeriod]) {
       subject = periodsData[selectedPeriod].subject || "";
+      examFrequency = periodsData[selectedPeriod].exam_frequency ?? null;   // <── ADICIONADO
       studentsStatus = { ...(periodsData[selectedPeriod].students || {}) };
     } else {
       const todayStr = new Date().toLocaleDateString("sv-SE");
@@ -232,9 +234,11 @@
 
       if (selectedPeriod && periodsData[selectedPeriod]) {
         subject = periodsData[selectedPeriod].subject || "";
+        examFrequency = periodsData[selectedPeriod].exam_frequency ?? null;   // <── ADICIONADO
         studentsStatus = { ...(periodsData[selectedPeriod].students || {}) };
       } else {
         subject = "";
+        examFrequency = null;
         studentsStatus = {};
       }
     }
@@ -247,9 +251,11 @@
   function onPeriodChange() {
     if (selectedPeriod && periodsData[selectedPeriod]) {
       subject = periodsData[selectedPeriod].subject || "";
+      examFrequency = periodsData[selectedPeriod].exam_frequency ?? null;   // <── ADICIONADO
       studentsStatus = { ...(periodsData[selectedPeriod].students || {}) };
     } else {
       subject = "";
+      examFrequency = null;
       studentsStatus = {};
     }
   }
@@ -271,6 +277,7 @@
       date: today,
       period: selectedPeriod,
       subject,
+      exam_frequency: examFrequency,   // <── ADICIONADO
       classes: {
         [`${course}-${grade}-${className}`]: {
           students: studentsStatus
@@ -368,12 +375,14 @@
 
   function selectSubject(s) {
     subject = s.subject_group;
+    examFrequency = s.exam_frequency;   // <── ADICIONADO
     selectedName = null;
     showSubjectModal = false;
   }
   
-    onMount(init);
-  </script>
+  onMount(init);
+</script>
+
   
   <style>
     .page {

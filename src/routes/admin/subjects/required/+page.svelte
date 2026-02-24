@@ -12,17 +12,17 @@
     let teachers = [];
 
     let form = {
-    name: "",
-    subject_group: "",
-    credits: 0,
-    required_attendance: 0,
-    required_reports: 0,
-    type: "required",
-    grade: 1,
-    course: "",
-    teacher_ids: []
-};
-
+        name: "",
+        subject_group: "",
+        credits: 0,
+        required_attendance: 0,
+        required_reports: 0,
+        type: "required",
+        grade: 1,
+        course: "",
+        teacher_ids: [],
+        exam_frequency: "0"   // ⭐ compatível com schema (default "0")
+    };
 
     onMount(async () => {
         subjects = await apiFetch("/api/subjects/required");
@@ -32,68 +32,60 @@
     $: console.log("TEACHERS >>>", teachers);
     $: console.log("SUBJECTS >>>", subjects);
     $: if (teachers.length > 0 && subjects.length > 0) {
-    subjects = [...subjects];
-}
+        subjects = [...subjects];
+    }
 
-
-
- 
     $: years = [1, 2, 3];
     const UNIVERSAL_SUBJECTS = ["総合探究"];
 
-$: availableTeachers = teachers.filter(t => {
-    const target = showEditModal ? editForm?.name : form?.name;
+    $: availableTeachers = teachers.filter(t => {
+        const target = showEditModal ? editForm?.name : form?.name;
 
-    // Se não tem nome ainda → mostra todos
-    if (!target) return true;
+        // Se não tem nome ainda → mostra todos
+        if (!target) return true;
 
-    // Se é matéria universal → mostra todos
-    if (UNIVERSAL_SUBJECTS.includes(target)) return true;
+        // Se é matéria universal → mostra todos
+        if (UNIVERSAL_SUBJECTS.includes(target)) return true;
 
-    // Caso contrário → filtra por subjects
-    return t.subjects?.includes(target);
-});
+        // Caso contrário → filtra por subjects
+        return t.subjects?.includes(target);
+    });
 
+    function getTeacherNames(ids) {
+        if (!ids || ids.length === 0) return "—";
 
+        // Converte tudo para string
+        const stringIds = ids.map(id => String(id));
 
-function getTeacherNames(ids) {
-    if (!ids || ids.length === 0) return "—";
-
-    // Converte tudo para string
-    const stringIds = ids.map(id => String(id));
-
-    return teachers
-        .filter(t => stringIds.includes(String(t.id)))
-        .map(t => t.name)
-        .join("、");
-}
-
-
-
-
+        return teachers
+            .filter(t => stringIds.includes(String(t.id)))
+            .map(t => t.name)
+            .join("、");
+    }
 
     function displayTeacherNames(ids) {
-    if (!ids || ids.length === 0) return "—";
+        if (!ids || ids.length === 0) return "—";
 
-    // Caso especial: 各担任
-    if (ids.length === 1 && ids[0] === "ALL_HOMEROOM") {
-        return "各担任";
+        // Caso especial: 各担任
+        if (ids.length === 1 && ids[0] === "ALL_HOMEROOM") {
+            return "各担任";
+        }
+
+        // Converte IDs para número
+        const numericIds = ids.map(id => Number(id));
+
+        return teachers
+            .filter(t => numericIds.includes(t.id))
+            .map(t => t.name)
+            .join("、");
     }
 
-    // Converte IDs para número
-    const numericIds = ids.map(id => Number(id));
-
-    return teachers
-        .filter(t => numericIds.includes(t.id))
-        .map(t => t.name)
-        .join("、");
+    function formatExamFrequency(value) {
+        if (value === "4") return "年4回";
+        if (value === "1") return "年1回";
+        if (value === "0" || value === null || value === undefined || value === "") return "試験なし";
+        return value; // fallback por segurança
     }
-
-
-
-
-    
-
 
     async function openSubject(id) {
         selectedSubject = await apiFetch(`/api/subjects/${id}`);
@@ -101,104 +93,100 @@ function getTeacherNames(ids) {
     }
 
     async function createSubject() {
-    try {
-        const created = await apiFetch("/api/subjects", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(form)
-        });
+        try {
+            const created = await apiFetch("/api/subjects", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(form)
+            });
 
-        // pega o subject completo
-        const full = await apiFetch(`/api/subjects/${created.id}`);
+            // pega o subject completo
+            const full = await apiFetch(`/api/subjects/${created.id}`);
 
-        subjects = [...subjects, full];
-        showCreateModal = false;
+            subjects = [...subjects, full];
+            showCreateModal = false;
 
-        form = {
-            name: "",
-            subject_group: "",
-            grade: 1,
-            credits: 0,
-            required_attendance: 0,
-            required_reports: 0,
-            type: "required",
-            course: "全",
-            teacher_ids: []
-        };
+            form = {
+                name: "",
+                subject_group: "",
+                grade: 1,
+                credits: 0,
+                required_attendance: 0,
+                required_reports: 0,
+                type: "required",
+                course: "全",
+                teacher_ids: [],
+                exam_frequency: "0"   // ⭐ reset seguro
+            };
 
-    } catch (err) {
-        alert("エラー: " + err.message);
+        } catch (err) {
+            alert("エラー: " + err.message);
+        }
     }
-}
-
 
     function startEdit(subject) {
         editForm = structuredClone(subject);
         if (!editForm.grade) editForm.grade = 1;
+        if (!editForm.exam_frequency) editForm.exam_frequency = "0"; // ⭐ garante compatibilidade
         showEditModal = true;
     }
 
     async function updateSubject() {
-    try {
-        const updated = await apiFetch(`/api/subjects/${editForm.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(editForm)
-        });
+        try {
+            const updated = await apiFetch(`/api/subjects/${editForm.id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(editForm)
+            });
 
-        // pega o subject completo
-        const full = await apiFetch(`/api/subjects/${editForm.id}`);
+            // pega o subject completo
+            const full = await apiFetch(`/api/subjects/${editForm.id}`);
 
-        subjects = subjects.map(s => s.id === editForm.id ? full : s);
+            subjects = subjects.map(s => s.id === editForm.id ? full : s);
 
-        showEditModal = false;
+            showEditModal = false;
 
-    } catch (err) {
-        alert("エラー: " + err.message);
-    }
-}
-
-const SUBJECT_ORDER = [
-    "国語",
-    "公民",
-    "地理歴史",
-    "数学",
-    "理科",
-    "英語",
-    "保健体育",
-    "芸術",
-    "家庭",
-    "情報",
-    "総合探究"
-];
-
-const COURSE_ORDER = ["全", "水", "集"];
-
-
-function sortSubjects(list) {
-    return [...list].sort((a, b) => {
-        // 1. Ordenar pelo grupo principal (国語、公民…)
-        const aMain = SUBJECT_ORDER.indexOf(a.name);
-        const bMain = SUBJECT_ORDER.indexOf(b.name);
-
-        if (aMain !== bMain) return aMain - bMain;
-
-        // 2. Dentro do grupo, ordenar pelo subject_group
-        if (a.subject_group !== b.subject_group) {
-            return a.subject_group.localeCompare(b.subject_group, "ja");
+        } catch (err) {
+            alert("エラー: " + err.message);
         }
+    }
 
-        // 3. Dentro do subject_group, ordenar pelo course
-        const aCourse = COURSE_ORDER.indexOf(a.course);
-        const bCourse = COURSE_ORDER.indexOf(b.course);
+    const SUBJECT_ORDER = [
+        "国語",
+        "公民",
+        "地理歴史",
+        "数学",
+        "理科",
+        "英語",
+        "保健体育",
+        "芸術",
+        "家庭",
+        "情報",
+        "総合探究"
+    ];
 
-        return aCourse - bCourse;
-    });
-}
+    const COURSE_ORDER = ["全", "水", "集"];
 
+    function sortSubjects(list) {
+        return [...list].sort((a, b) => {
+            // 1. Ordenar pelo grupo principal (国語、公民…)
+            const aMain = SUBJECT_ORDER.indexOf(a.name);
+            const bMain = SUBJECT_ORDER.indexOf(b.name);
 
+            if (aMain !== bMain) return aMain - bMain;
 
+            // 2. Dentro do grupo, ordenar pelo subject_group
+            if (a.subject_group !== b.subject_group) {
+                return a.subject_group.localeCompare(b.subject_group, "ja");
+            }
 
+            // 3. Dentro do subject_group, ordenar pelo course
+            const aCourse = COURSE_ORDER.indexOf(a.course);
+            const bCourse = COURSE_ORDER.indexOf(b.course);
+
+            return aCourse - bCourse;
+        });
+    }
 </script>
 
 <h1>必修科目一覧</h1>
@@ -206,7 +194,6 @@ function sortSubjects(list) {
 <button on:click={() => showCreateModal = true}>
     新規科目追加
 </button>
-
 
 {#each years as year}
     <h2>{year}年生の科目</h2>
@@ -217,27 +204,26 @@ function sortSubjects(list) {
         <table>
             <thead>
                 <tr>
-            
                     <th>教科</th>
                     <th>科目</th>
                     <th>コース</th>
                     <th>担当教員</th>
                     <th>単位数</th>
+                    <th>試験頻度</th> <!-- ⭐ novo -->
                 </tr>
             </thead>
 
             <tbody>
                 {#each sortSubjects(subjects.filter(s => s.grade === year)) as s}
-
                     <tr>
                         <td on:click={() => openSubject(s.id)} style="cursor:pointer;">{s.name}</td>
                         <td on:click={() => openSubject(s.id)} style="cursor:pointer;">{s.subject_group ?? "—"}</td>
                         <td on:click={() => openSubject(s.id)} style="cursor:pointer;">{s.course}</td>
-                        <td on:click={() => openSubject(s.id)} style="cursor:pointer;">{displayTeacherNames(s.teacher_ids)}
+                        <td on:click={() => openSubject(s.id)} style="cursor:pointer;">
+                            {displayTeacherNames(s.teacher_ids)}
                         </td>
-                            
                         <td>{s.credits}</td>
-
+                        <td>{formatExamFrequency(s.exam_frequency)}</td> <!-- ⭐ mostra 4/1/0 -->
                     </tr>
                 {/each}
             </tbody>
@@ -255,15 +241,12 @@ function sortSubjects(list) {
         <p><strong>単位数:</strong> {selectedSubject.credits}</p>
         <p><strong>必要出席日数:</strong> {selectedSubject.required_attendance}</p>
         <p><strong>必要レポート数:</strong> {selectedSubject.required_reports}</p>
+        <p><strong>試験頻度:</strong> {formatExamFrequency(selectedSubject.exam_frequency)}</p>
         <p><strong>担当教員:</strong>　{displayTeacherNames(selectedSubject.teacher_ids)}</p>
 
-       <button on:click={() => startEdit(selectedSubject)}>編集</button>
-
-
-  
+        <button on:click={() => startEdit(selectedSubject)}>編集</button>
     {/if}
 </Modal>
-
 
 <Modal open={showCreateModal} close={() => showCreateModal = false}>
     <h2>新規科目追加</h2>
@@ -300,7 +283,6 @@ function sortSubjects(list) {
             {/each}
         </select>
 
-
         <label>単位数</label>
         <input type="number" bind:value={form.credits} required />
 
@@ -309,6 +291,14 @@ function sortSubjects(list) {
 
         <label>必要レポート数</label>
         <input type="number" bind:value={form.required_reports} required />
+
+        <!-- ⭐ exam_frequency no create -->
+        <label>試験頻度</label>
+        <select bind:value={form.exam_frequency}>
+            <option value="4">年4回</option>
+            <option value="1">年1回</option>
+            <option value="0">試験なし</option>
+        </select>
 
         <button type="submit">追加</button>
     </form>
@@ -359,12 +349,19 @@ function sortSubjects(list) {
             <label>必要レポート数</label>
             <input type="number" bind:value={editForm.required_reports} required />
 
-
+            <!-- ⭐ exam_frequency no edit -->
+            <label>試験頻度</label>
+            <select bind:value={editForm.exam_frequency}>
+                <option value="4">年4回</option>
+                <option value="1">年1回</option>
+                <option value="0">試験なし</option>
+            </select>
 
             <button type="submit">保存</button>
         </form>
     {/if}
 </Modal>
+
 
 
 

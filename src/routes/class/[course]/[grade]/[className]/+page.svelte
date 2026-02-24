@@ -99,8 +99,26 @@ on:click={() => goto(`/class/${course}/${grade}/${className}/week_attend`)}
 出席簿を見る
 </button>
 
+<button
+class="reports-button"
+on:click={() => goto(`/class/${course}/${grade}/${className}/reports`)}
+>
+レポート管理
+</button>
 
-  
+<button
+class="exams-button"
+on:click={() => goto(`/class/${course}/${grade}/${className}/exams`)}
+>
+試験管理
+</button>
+
+<button
+class="evaluation-button"
+on:click={() => goto(`/class/${course}/${grade}/${className}/evaluation`)}
+>
+評価管理
+</button>
   
   {#if students.length === 0}
     <p>このクラスには生徒がいません。</p>
@@ -455,10 +473,47 @@ on:click={() => goto(`/class/${course}/${grade}/${className}/week_attend`)}
   margin: 1rem 0; 
   } 
 
+  .reports-button {
+  display: inline-block; 
+  padding: 8px 12px; 
+  border-radius: 6px; 
+  text-decoration: none; 
+  font-weight: 600; 
+  color: rgb(255, 255, 255); 
+  margin: 1rem 0; 
+  } 
 
+  .exams-button {
+  display: inline-block; 
+  padding: 8px 12px; 
+  border-radius: 6px; 
+  text-decoration: none; 
+  font-weight: 600; 
+  color: rgb(255, 255, 255); 
+  margin: 1rem 0; 
+  } 
 
-  .seat-button { background: #0070f3; }
-  .seat-button:hover { background: #0059c9; }
+  .evaluation-button {
+  display: inline-block; 
+  padding: 8px 12px; 
+  border-radius: 6px; 
+  text-decoration: none; 
+  font-weight: 600; 
+  color: rgb(255, 255, 255); 
+  margin: 1rem 0; 
+  } 
+
+  .exams-button { background: #5500ff;  margin-left: 1rem; }
+  .exams-button:hover { background: #370062; }
+
+  .evaluation-button { background: #ff0000;  margin-left: 1rem; }
+  .evaluation-button:hover { background: #a00000; }
+
+  .seat-button { background: rgb(0, 68, 255); }
+  .seat-button:hover { background: #1e3591; }
+
+  .reports-button { background: #f3007e;  margin-left: 1rem; }
+  .reports-button:hover { background: #8e0891; }
 
   .attendance-button { background: #28a745; margin-left: 1rem; }
   .attendance-button:hover { background: #1e7e34; }
