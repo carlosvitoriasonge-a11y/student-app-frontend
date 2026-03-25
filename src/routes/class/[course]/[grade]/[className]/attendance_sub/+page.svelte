@@ -28,6 +28,9 @@
   let saveMessage = "";
   let saveTimer = null;
 
+  // 🔥 ESSENCIAL: guardar o objeto da matéria
+  let selectedSubject = null;
+
   $: attendance = $attendanceStore;
   $: sub = $attendanceSubStore;
 
@@ -56,7 +59,7 @@
   let today = new Date().toLocaleDateString("sv-SE");
   let selectedPeriod = "";
   let subject = "";
-  let examFrequency = null;   // <── ADICIONADO
+  let examFrequency = null;
 
   // ==========================
   // SUBJECT MODAL
@@ -66,7 +69,6 @@
   let subjectGroups = {};
   let selectedName = null;
 
-  // periodsData: { "１限目": { subject, students: { id: status } } }
   let periodsData = {};
   let studentsStatus = {};
 
@@ -221,7 +223,7 @@
 
     if (selectedPeriod && periodsData[selectedPeriod]) {
       subject = periodsData[selectedPeriod].subject || "";
-      examFrequency = periodsData[selectedPeriod].exam_frequency ?? null;   // <── ADICIONADO
+      examFrequency = periodsData[selectedPeriod].exam_frequency ?? null;
       studentsStatus = { ...(periodsData[selectedPeriod].students || {}) };
     } else {
       const todayStr = new Date().toLocaleDateString("sv-SE");
@@ -234,7 +236,7 @@
 
       if (selectedPeriod && periodsData[selectedPeriod]) {
         subject = periodsData[selectedPeriod].subject || "";
-        examFrequency = periodsData[selectedPeriod].exam_frequency ?? null;   // <── ADICIONADO
+        examFrequency = periodsData[selectedPeriod].exam_frequency ?? null;
         studentsStatus = { ...(periodsData[selectedPeriod].students || {}) };
       } else {
         subject = "";
@@ -251,7 +253,7 @@
   function onPeriodChange() {
     if (selectedPeriod && periodsData[selectedPeriod]) {
       subject = periodsData[selectedPeriod].subject || "";
-      examFrequency = periodsData[selectedPeriod].exam_frequency ?? null;   // <── ADICIONADO
+      examFrequency = periodsData[selectedPeriod].exam_frequency ?? null;
       studentsStatus = { ...(periodsData[selectedPeriod].students || {}) };
     } else {
       subject = "";
@@ -268,16 +270,17 @@
       alert("時限を選択してください。");
       return;
     }
-    if (!subject) {
-      alert("科目を入力してください。");
+    if (!selectedSubject) {
+      alert("科目を選択してください。");
       return;
     }
 
     const payload = {
       date: today,
       period: selectedPeriod,
-      subject,
-      exam_frequency: examFrequency,   // <── ADICIONADO
+      subject: selectedSubject.subject_group,
+      subject_id: selectedSubject.id,     // 🔥 UUID REAL
+      exam_frequency: examFrequency,
       classes: {
         [`${course}-${grade}-${className}`]: {
           students: studentsStatus
@@ -292,7 +295,7 @@
 
     saveMessage = "保存しました。";
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => saveMessage = "", 1500);
+    saveTimer = setTimeout(() => (saveMessage = ""), 1500);
 
     await loadDay();
   }
@@ -320,7 +323,7 @@
   }
 
   // ==========================
-  // ORDEM DE MATÉRIAS (REUTILIZADA)
+  // ORDEM DE MATÉRIAS
   // ==========================
   const SUBJECT_ORDER = [
     "国語",
@@ -362,10 +365,8 @@
 
     subjects = Array.isArray(data) ? data : [];
 
-    // ORDENAR AQUI
     subjects = sortSubjects(subjects);
 
-    // AGRUPAR POR name
     subjectGroups = {};
     for (const s of subjects) {
       if (!subjectGroups[s.name]) subjectGroups[s.name] = [];
@@ -374,14 +375,16 @@
   }
 
   function selectSubject(s) {
+    selectedSubject = s;   // 🔥 ESSENCIAL
     subject = s.subject_group;
-    examFrequency = s.exam_frequency;   // <── ADICIONADO
+    examFrequency = s.exam_frequency;
     selectedName = null;
     showSubjectModal = false;
   }
-  
+
   onMount(init);
 </script>
+
 
   
   <style>

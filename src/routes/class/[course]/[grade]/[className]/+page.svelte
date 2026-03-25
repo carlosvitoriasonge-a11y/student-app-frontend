@@ -76,7 +76,7 @@
 </h1>
 
   <button class="seat-button" on:click={() => goto(`/class/${course}/${grade}/${className}/seating`)}
-  >座席表を見る
+  >座席表
   </button>
 
   <button
@@ -96,7 +96,7 @@
 class="week-attend-button"
 on:click={() => goto(`/class/${course}/${grade}/${className}/week_attend`)}
 >
-出席簿を見る
+出席簿
 </button>
 
 <button
@@ -118,6 +118,20 @@ class="evaluation-button"
 on:click={() => goto(`/class/${course}/${grade}/${className}/evaluation`)}
 >
 評価管理
+</button>
+
+<button
+class="zenki-button"
+on:click={() => goto(`/class/${course}/${grade}/${className}/zenki`)}
+>
+前期成績
+</button>
+
+<button
+class="koki-button"
+on:click={() => goto(`/class/${course}/${grade}/${className}/koki`)}
+>
+最終成績
 </button>
   
   {#if students.length === 0}
@@ -503,8 +517,34 @@ on:click={() => goto(`/class/${course}/${grade}/${className}/evaluation`)}
   margin: 1rem 0; 
   } 
 
+  .zenki-button {
+  display: inline-block; 
+  padding: 8px 12px; 
+  border-radius: 6px; 
+  text-decoration: none; 
+  font-weight: 600; 
+  color: rgb(0, 0, 0); 
+  margin: 1rem 0; 
+  } 
+
+  .koki-button {
+  display: inline-block; 
+  padding: 8px 12px; 
+  border-radius: 6px; 
+  text-decoration: none; 
+  font-weight: 600; 
+  color: rgb(255, 255, 255); 
+  margin: 1rem 0; 
+  } 
+
   .exams-button { background: #5500ff;  margin-left: 1rem; }
   .exams-button:hover { background: #370062; }
+
+  .zenki-button { background: #9e9e9e;  margin-left: 1rem; }
+  .zenki-button:hover { background: #ffffff; }
+
+  .koki-button { background: #000000;  margin-left: 1rem; }
+  .koki-button:hover { background: #999999; }
 
   .evaluation-button { background: #ff0000;  margin-left: 1rem; }
   .evaluation-button:hover { background: #a00000; }

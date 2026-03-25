@@ -1,11 +1,13 @@
 <script>
     const menu = [
-        { label: "必修科目一覧", path: "/admin/subjects/required" },
-        { label: "探究科目一覧", path: "/admin/subjects/optional" }
+        { label: "補習対象者リスト", path: "/kyomu/hoshuu" },
+        { label: "補習管理画面", path: "/kyomu/hoshuumanage" },
+        { label: "再履修管理画面", path: "/kyomu/sairishuu" },
+        { label: "再履修完了済み一覧", path: "/kyomu/sairishuulist" }
     ];
 </script>
 
-<h1>教科・科目管理</h1>
+<h1>教務メニュー</h1>
 
 <div class="menu-grid">
     {#each menu as item}

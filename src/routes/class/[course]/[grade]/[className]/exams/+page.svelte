@@ -295,11 +295,15 @@
       z-index: 50;
     }
     .modal-content {
-      background: white;
-      padding: 16px;
-      border-radius: 4px;
-      min-width: 280px;
-    }
+    background: white;
+    padding: 16px;
+    border-radius: 4px;
+    min-width: 280px;
+
+    max-height: 80vh;      /* 🔥 impede de ultrapassar a tela */
+    overflow-y: auto;      /* 🔥 cria scroll interno */
+}
+
   
     .table-wrapper {
       width: 100%;

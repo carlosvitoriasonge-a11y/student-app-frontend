@@ -119,6 +119,88 @@
     }
   }
 
+  // ====== MOUSHIOKURI (中学校からの申し送り) ======
+let showMoushiokuriModal = false;
+let showMoushiokuriAddModal = false;
+let moushiokuriText = "";
+let moushiokuriTeacher = "";
+let moushiokuriError = "";
+
+async function addMoushiokuri() {
+  if (!moushiokuriText.trim()) {
+    moushiokuriError = "内容を入力してください";
+    return;
+  }
+
+  if (!moushiokuriTeacher.trim()) {
+    moushiokuriError = "担当者名を入力してください";
+    return;
+  }
+
+  moushiokuriError = "";
+
+  try {
+    await apiFetch("/api/students/add_moushiokuri", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        student_id: student.id,
+        text: moushiokuriText,
+        teacher: moushiokuriTeacher
+      })
+    });
+
+    student = await apiFetch(`/api/students/${id}`, { cache: "no-store" });
+
+    showMoushiokuriAddModal = false;
+    moushiokuriText = "";
+    moushiokuriTeacher = "";
+  } catch (e) {
+    moushiokuriError = "保存に失敗しました";
+  }
+}
+
+
+  // ====== SHIDOU (指導履歴) ======
+  let showShidouModal = false;      // modal grande com a lista
+  let showShidouAddModal = false;   // modal para adicionar
+  let shidouText = "";
+  let shidouError = "";
+  let shidouTeacher = "";
+
+
+  async function addShidou() {
+  if (!shidouText.trim()) {
+    shidouError = "指導内容を入力してください";
+    return;
+  }
+
+  shidouError = "";
+
+  try {
+    await apiFetch("/api/students/add_shidou", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        student_id: student.id,
+        text: shidouText,
+        teacher: shidouTeacher
+      })
+    });
+
+    // recarregar dados do aluno
+    student = await apiFetch(`/api/students/${id}`, { cache: "no-store" });
+
+    showShidouAddModal = false;
+    shidouText = "";
+    shidouTeacher = "";
+  } catch (e) {
+    shidouError = "保存に失敗しました";
+  }
+}
+
+
+
   // ====== SUSPEND / RETURN ======
   let showSuspend = false;
   let showReturn = false;
@@ -566,6 +648,138 @@
     <button class="danger" on:click={() => showReturnPassword = true}>復学する</button>
     {/if}
 
+
+    <h3>中学校の申し送り</h3>
+
+    <button on:click={() => showMoushiokuriModal = true}>
+      申し送りを見る
+    </button>
+
+
+    <h3>指導履歴</h3>
+
+    <button on:click={() => showShidouModal = true}>
+      指導履歴を見る
+    </button>
+
+    {#if showMoushiokuriModal}
+    <div class="modal-backdrop">
+      <div class="modal large">
+        <h3>中学校からの申し送り</h3>
+    
+        {#if student.moushiokuri_history && student.moushiokuri_history.length > 0}
+          <ul class="shidou-list">
+            {#each student.moushiokuri_history as entry}
+              <li>
+                <strong>{entry.date}</strong>（{entry.teacher}）<br />
+                {entry.text}
+              </li>
+            {/each}
+          </ul>
+        {:else}
+          <p>申し送りはありません。</p>
+        {/if}
+    
+        <div class="actions">
+          <button on:click={() => showMoushiokuriAddModal = true}>＋ 追加</button>
+          <button on:click={() => showMoushiokuriModal = false}>閉じる</button>
+        </div>
+      </div>
+    </div>
+    {/if}
+    
+
+    {#if showMoushiokuriAddModal}
+<div class="modal-backdrop">
+  <div class="modal">
+    <h3>申し送りを追加</h3>
+
+    <div class="form-group">
+      <label>担当者</label>
+      <input type="text" bind:value={moushiokuriTeacher} />
+    </div>
+
+    <div class="form-group">
+      <label>内容</label>
+      <textarea rows="4" bind:value={moushiokuriText}></textarea>
+    </div>
+
+    {#if moushiokuriError}
+      <p style="color:red">{moushiokuriError}</p>
+    {/if}
+
+    <div class="actions">
+      <button on:click={addMoushiokuri}>追加</button>
+      <button on:click={() => { 
+        showMoushiokuriAddModal = false; 
+        moushiokuriText = ""; 
+        moushiokuriTeacher = ""; 
+      }}>キャンセル</button>
+    </div>
+  </div>
+</div>
+{/if}
+
+
+
+{#if showShidouModal}
+<div class="modal-backdrop">
+  <div class="modal" style="width: 500px; max-height: 80vh; overflow-y: auto;">
+    <h3>指導履歴</h3>
+
+    {#if student.shidou_history && student.shidou_history.length > 0}
+      <ul class="shidou-list">
+        {#each student.shidou_history as entry}
+          <li>
+            <strong>{entry.date}</strong>（{entry.teacher}）<br />
+            {entry.text}
+          </li>
+        {/each}
+      </ul>
+    {:else}
+      <p>指導履歴はありません。</p>
+    {/if}
+
+    <div class="actions">
+      <button on:click={() => showShidouAddModal = true}>＋ 追加</button>
+      <button on:click={() => showShidouModal = false}>閉じる</button>
+    </div>
+  </div>
+</div>
+{/if}
+
+{#if showShidouAddModal}
+<div class="modal-backdrop">
+  <div class="modal">
+    <h3>指導内容を追加</h3>
+
+    <div class="form-group">
+      <label>指導内容</label>
+      <textarea bind:value={shidouText} rows="4"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>教員名
+      </label>
+      <input type="text" bind:value={shidouTeacher} />
+    </div>
+    
+
+    {#if shidouError}
+      <p style="color:red">{shidouError}</p>
+    {/if}
+
+    <div class="actions">
+      <button on:click={addShidou}>追加</button>
+      <button on:click={() => { showShidouAddModal = false; shidouText = ""; }}>キャンセル</button>
+    </div>
+  </div>
+</div>
+{/if}
+
+
+
+
     
 
     <h3>休学履歴</h3>
@@ -806,6 +1020,9 @@
 {/if}
 
 
+
+
+
 <style>
   .container { display: flex; gap: 40px; }
   .left, .right { width: 50%; }
@@ -909,5 +1126,32 @@
     margin-top: 2px;
     padding: 6px 12px;
   }
+
+  .shidou-list {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 12px;
+}
+
+.shidou-list li {
+  background: #fafafa;
+  border: 1px solid #ddd;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+}
+
+.modal {
+  background: white;
+  padding: 20px;
+  width: 400px;
+  max-height: 80vh;        /* impede de estourar a tela */
+  overflow-y: auto;        /* ativa scroll interno */
+  border-radius: 10px;
+}
+
+
+
+
 
 </style>

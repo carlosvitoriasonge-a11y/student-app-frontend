@@ -432,7 +432,11 @@ function setSemester(sem) {
         padding: 16px;
         border-radius: 4px;
         min-width: 280px;
+
+        max-height: 80vh;      /* 🔥 impede de ultrapassar a tela */
+        overflow-y: auto;      /* 🔥 cria scroll interno */
     }
+
 
     .stats-box {
         margin: 10px 0;

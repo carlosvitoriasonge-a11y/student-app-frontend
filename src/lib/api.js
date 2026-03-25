@@ -16,9 +16,10 @@ export async function apiFetch(url, options = {}, responseType = "json") {
 
   // Se o body for FormData, NÃO definir Content-Type
   const isFormData = options.body instanceof FormData;
-  if (!isFormData && !options.headers["Content-Type"]) {
+  if (options.body && !isFormData && !options.headers["Content-Type"]) {
     options.headers["Content-Type"] = "application/json";
   }
+  
 
   // Usa a URL como veio (sem inventar barra)
   const full = url;
