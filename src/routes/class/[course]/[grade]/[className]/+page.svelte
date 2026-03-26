@@ -141,7 +141,7 @@ on:click={() => goto(`/class/${course}/${grade}/${className}/koki`)}
     <table class="students-table">
       <thead>
         <tr>
-          <th rowspan="2" class="num-col vertical-header">出席番号</th>
+          <th rowspan="2" class="num-col vertical-header" lang="ja">出席番号</th>
           <th rowspan="2" class="name-col">名前</th>
           <th colspan="10" class="term-header">前期</th>
           <th colspan="10" class="term-header">後期</th>
@@ -149,7 +149,7 @@ on:click={() => goto(`/class/${course}/${grade}/${className}/koki`)}
         </tr>
 
         <tr>
-          <th class="compact-col">授業日数</th>
+          <th class="compact-col" lang="ja">授業日数</th>
           <th class="compact-col">出席すべき日数</th>
           <th class="compact-col">出　　席</th>
           <th class="compact-col">欠　　席</th>
@@ -264,6 +264,15 @@ on:click={() => goto(`/class/${course}/${grade}/${className}/koki`)}
   font-size: 14px;
   justify-content: center;
   align-items: center;
+  font-family:
+    "Hiragino Sans",
+    "Yu Gothic",
+    "Hiragino Kaku Gothic ProN",
+    "Osaka",
+    sans-serif;
+
+  font-feature-settings: "vert";
+
   }
 
   /* 出席番号 vertical */
@@ -566,7 +575,7 @@ on:click={() => goto(`/class/${course}/${grade}/${className}/koki`)}
 
 
   /* Centralização correta para texto vertical */
-  .compact-col,
+
   .vertical-header {
   writing-mode: vertical-rl;
   text-orientation: upright;
@@ -574,6 +583,13 @@ on:click={() => goto(`/class/${course}/${grade}/${className}/koki`)}
   text-align: center;
   line-height: 1.2;
   padding: 0;
+  font-family:
+  "Hiragino Sans",
+  "Yu Gothic",
+  "Hiragino Kaku Gothic ProN",
+  "Osaka",
+  sans-serif;
+
   }
 
   /* Fixar 出席番号 (coluna 1) */

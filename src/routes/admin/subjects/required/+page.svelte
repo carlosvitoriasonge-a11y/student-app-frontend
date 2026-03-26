@@ -389,7 +389,7 @@
     }
 
     table {
-        width: 50%;
+        width: 100%;
         border-collapse: collapse;
         background: white;
         table-layout: fixed; /* ← garante alinhamento uniforme */
