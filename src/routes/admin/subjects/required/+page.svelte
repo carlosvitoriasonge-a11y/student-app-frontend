@@ -209,7 +209,9 @@
                     <th>コース</th>
                     <th>担当教員</th>
                     <th>単位数</th>
-                    <th>試験頻度</th> <!-- ⭐ novo -->
+                    <th>試験頻度</th>
+                    <th>出席回数</th> 
+                    <th>レポート数</th>  <!-- ⭐ novo -->
                 </tr>
             </thead>
 
@@ -224,6 +226,8 @@
                         </td>
                         <td>{s.credits}</td>
                         <td>{formatExamFrequency(s.exam_frequency)}</td> <!-- ⭐ mostra 4/1/0 -->
+                        <td>{s.required_attendance}</td>
+                        <td>{s.required_reports}</td>
                     </tr>
                 {/each}
             </tbody>
@@ -444,7 +448,7 @@
     }
 
     th:nth-child(2), td:nth-child(2) {
-    width: 30%;
+    width: 20%;
     }
 
 
