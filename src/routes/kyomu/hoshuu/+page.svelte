@@ -1,7 +1,7 @@
 <script>
     export const ssr = false;
 
-    import { onMount } from "svelte";
+    import { onMount, tick } from "svelte";
     import { apiFetch } from "$lib/api.js";
     import { schoolYearFromDate } from "$lib/utils/date.js";
 
@@ -30,41 +30,34 @@
 
             const turmaLabel = `${grade}年${className}`;
 
-            const students = await apiFetch(
-                `/api/students/by_class?course=${course}&grade=${grade}&class_name=${className}`
+            // cria a turma vazia e força renderização parcial
+            resultado[course][turmaLabel] = [];
+            await tick();
+
+            // 🔥 CARREGAMENTO PARALELO (4 chamadas simultâneas)
+            const [students, subjects, att, hoshuu] = await Promise.all([
+                apiFetch(`/api/students/by_class?course=${course}&grade=${grade}&class_name=${className}`),
+                apiFetch(`/api/subjects?course=${course}&grade=${grade}`),
+                apiFetch(`/api/attendance_sub_special/special_sub?course=${course}&grade=${grade}&class_name=${className}&sy=${sy}`),
+                apiFetch(`/api/hoshuu/get?course=${course}&grade=${grade}&class_name=${className}&sy=${sy}`)
+            ]);
+
+            // 🔥 CARREGAR TASKS EM PARALELO
+            const yearKey = `${sy}_1st`;
+
+            const tasksResults = await Promise.all(
+                subjects.map(subj =>
+                    apiFetch(`/api/tasks/class/${course}/${grade}/${className}/${yearKey}/tasks?subject_id=${subj.id}`)
+                )
             );
 
-            const subjects = await apiFetch(
-                `/api/subjects?course=${course}&grade=${grade}`
-            );
-
-            const att = await apiFetch(
-                `/api/attendance_sub_special/special_sub?course=${course}&grade=${grade}&class_name=${className}&sy=${sy}`
-            );
-
-            // 🔥 HOSHUU
-            const hoshuu = await apiFetch(
-                `/api/hoshuu/get?course=${course}&grade=${grade}&class_name=${className}&sy=${sy}`
-            );
-
-            // 🔥 CARREGAR TASKS POR MATÉRIA (1st semestre)
             let tasksBySubject = {};
-            for (const subj of subjects) {
-                const subjId = subj.id;
-                const yearKey = `${sy}_1st`;
+            subjects.forEach((subj, i) => {
+                const tasks = tasksResults[i];
+                tasksBySubject[subj.id] = Array.isArray(tasks) ? tasks : [];
+            });
 
-                const res = await apiFetch(
-                    `/api/tasks/class/${course}/${grade}/${className}/${yearKey}/tasks?subject_id=${subjId}`
-                );
-
-                const tasks = res?.json ? await res.json() : res;
-                tasksBySubject[subjId] = Array.isArray(tasks) ? tasks : [];
-            }
-
-            if (!resultado[course][turmaLabel]) {
-                resultado[course][turmaLabel] = [];
-            }
-
+            // 🔥 PROCESSAR ALUNOS
             for (const st of students) {
                 if (st.status === "休学") continue;
 
@@ -76,44 +69,35 @@
                     const subjName = subj.subject_group;
                     const required = subj.required_attendance ?? 0;
 
+                    // presença válida
                     let valid = 0;
-
                     if (att[sid] && att[sid][subjId]) {
-                        const groups = att[sid][subjId];
-                        valid = groups.valid_attendance ?? 0;
+                        valid = att[sid][subjId].valid_attendance ?? 0;
                     }
 
-                    // 🔥 HOSHUU
+                    // hoshuu
                     const doneDates = hoshuu[sid]?.[subjId] ?? [];
                     const doneCount = doneDates.length;
 
                     const faltam = Math.max(required - valid - doneCount, 0);
 
-                    // 🔥 CALCULAR RELATÓRIOS PENDENTES
-                    // 🔥 CALCULAR RELATÓRIOS PENDENTES
-const tasks = tasksBySubject[subjId] ?? [];
+                    // relatórios
+                    const tasks = tasksBySubject[subjId] ?? [];
 
-// 分子: quantos o aluno entregou
-let submittedCount = 0;
-for (const t of tasks) {
-    if (Array.isArray(t.submitted) && t.submitted.includes(sid)) {
-        submittedCount++;
-    }
-}
+                    let submittedCount = 0;
+                    for (const t of tasks) {
+                        if (Array.isArray(t.submitted) && t.submitted.includes(sid)) {
+                            submittedCount++;
+                        }
+                    }
 
-// 分母: mínimo requerido de reports
-// prioridade: subject.required_reports (do subjects) → subject.required (do JSON de tasks) → 0
-let requiredReports = subj.required_reports ?? 0;
+                    let requiredReports = subj.required_reports ?? 0;
+                    if (tasksBySubject[subjId] && tasksBySubject[subjId].required) {
+                        requiredReports = tasksBySubject[subjId].required;
+                    }
 
-// se o JSON de tasks tiver "required" preenchido, ele manda na frente
-if (tasksBySubject[subjId] && tasksBySubject[subjId].required) {
-    requiredReports = tasksBySubject[subjId].required;
-}
+                    const missingReports = Math.max(requiredReports - submittedCount, 0);
 
-const missingReports = Math.max(requiredReports - submittedCount, 0);
-
-
-                    // 🔥 SE FALTAR PRESENÇA OU RELATÓRIO → ENTRA NA LISTA
                     if (faltam > 0 || missingReports > 0) {
                         pendentes.push({
                             name: subjName,
@@ -132,6 +116,7 @@ const missingReports = Math.max(requiredReports - submittedCount, 0);
                 }
             }
 
+            // ordenar alunos
             resultado[course][turmaLabel].sort((a, b) => {
                 const clean = (v) => Number(String(v).replace(/[^\d]/g, ""));
                 return clean(a.attend_no) - clean(b.attend_no);
@@ -173,10 +158,57 @@ const missingReports = Math.max(requiredReports - submittedCount, 0);
     };
 </script>
 
+<style>
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 80px;
+        font-size: 1.2em;
+        color: #444;
+    }
+    
+    .spinner {
+        width: 60px;
+        height: 60px;
+        border: 6px solid #ddd;
+        border-top-color: #3498db;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* 🔥 CSS GLOBAL PARA A TABELA */
+    :global(table) {
+        width: 100%;
+        border-collapse: collapse;
+        margin-left: 10px;
+        margin-bottom: 10px;
+        font-size: 1em;
+    }
+
+    :global(th), :global(td) {
+        padding: 6px 10px;
+        border: 1px solid #ccc;
+    }
+
+    :global(thead tr) {
+        background: #f0f0f0;
+    }
+</style>
+
+
 <h1>補習対象者（出席・レポート）【全校】</h1>
 
 {#if loading}
-    <p>読み込み中...</p>
+<div class="loading-container">
+    <div class="spinner"></div>
+    <p>データを読み込んでいます…</p>
+</div>
 {:else}
 
     {#each ["全", "水", "集"] as curso}
@@ -184,63 +216,40 @@ const missingReports = Math.max(requiredReports - submittedCount, 0);
         <h1 style="margin-top: 40px;">【{courseLabel(curso)}】</h1>
 
         {#each Object.entries(resultado[curso]) as [turma, alunos]}
-        <h2>[{turma}] （{alunos.length}名）</h2>
+            <h2>[{turma}] （{alunos.length}名）</h2>
 
             {#if alunos.length === 0}
                 <p>対象者なし</p>
             {:else}
-            <ol>
-                {#each alunos as al}
-                    <li style="margin-bottom: 20px;">
-                        <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 6px;">
-                            {al.attend_no}番 {al.name}
-                        </div>
-            
-                        <table
-                            style="
-                                width: 100%;
-                                border-collapse: collapse;
-                                margin-left: 10px;
-                                margin-bottom: 10px;
-                                font-size: 1em;
-                            "
-                        >
-                            <thead>
-                                <tr style="background: #f0f0f0;">
-                                    <th style="padding: 6px 10px; border: 1px solid #ccc; text-align: left; width: 50%;">
-                                        教科名
-                                    </th>
-                                    <th style="padding: 6px 10px; border: 1px solid #ccc; text-align: center; width: 25%;">
-                                        不足出席回数
-                                    </th>
-                                    <th style="padding: 6px 10px; border: 1px solid #ccc; text-align: center; width: 25%;">
-                                        不足レポート数
-                                    </th>
-                                </tr>
-                            </thead>
-            
-                            <tbody>
-                                {#each al.subjects as sb}
+                <ol>
+                    {#each alunos as al}
+                        <li style="margin-bottom: 20px;">
+                            <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 6px;">
+                                {al.attend_no}番 {al.name}
+                            </div>
+
+                            <table>
+                                <thead>
                                     <tr>
-                                        <td style="padding: 6px 10px; border: 1px solid #ccc;">
-                                            {sb.name}
-                                        </td>
-
-                                        <td style="padding: 6px 10px; border: 1px solid #ccc; text-align: center;">
-                                            {sb.faltam}
-                                        </td>
-
-                                        <td style="padding: 6px 10px; border: 1px solid #ccc; text-align: center;">
-                                            {sb.missingReports}
-                                        </td>
+                                        <th>教科名</th>
+                                        <th style="text-align:center;">不足出席回数</th>
+                                        <th style="text-align:center;">不足レポート数</th>
                                     </tr>
-                                {/each}
-                            </tbody>
-                        </table>
-                    </li>
-                {/each}
-            </ol>
-            
+                                </thead>
+
+                                <tbody>
+                                    {#each al.subjects as sb}
+                                        <tr>
+                                            <td>{sb.name}</td>
+                                            <td style="text-align:center;">{sb.faltam}</td>
+                                            <td style="text-align:center;">{sb.missingReports}</td>
+                                        </tr>
+                                    {/each}
+                                </tbody>
+                            </table>
+                        </li>
+                    {/each}
+                </ol>
             {/if}
         {/each}
 
