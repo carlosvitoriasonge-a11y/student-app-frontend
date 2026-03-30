@@ -34,7 +34,9 @@
         students = data;
   
         // 中学校一覧
-        juniorHighList = [...new Set(data.map(s => s.junior_high).filter(Boolean))];
+        juniorHighList = [...new Set(data.map(s => s.junior_high).filter(Boolean))]
+            .sort((a, b) => a.localeCompare(b, "ja"));
+
 
 const statsAll = await apiFetch("/api/attendance_stats/stats/all");
 studentStats = statsAll.student_stats;
