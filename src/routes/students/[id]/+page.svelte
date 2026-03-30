@@ -199,6 +199,135 @@ async function addMoushiokuri() {
   }
 }
 
+// ---------------------------------------------------------
+// ゼミ活動追加
+// ---------------------------------------------------------
+
+let zemiText = "";
+let zemiTeacher = "";
+let zemiError = "";
+let showZemiAddModal = false;
+
+
+// ====== 部活動・サークル活動 ======
+let showBukatsuModal = false;
+let showBukatsuAddModal = false;
+let bukatsuText = "";
+let bukatsuTeacher = "";
+let bukatsuError = "";
+
+// ====== 役員情報 ======
+let showYakuinModal = false;
+let showYakuinAddModal = false;
+let yakuinText = "";
+let yakuinTeacher = "";
+let yakuinError = "";
+
+
+async function addZemi() {
+  if (!zemiText.trim()) {
+    zemiError = "内容を入力してください";
+    return;
+  }
+  if (!zemiTeacher.trim()) {
+    zemiError = "担当者名を入力してください";
+    return;
+  }
+
+  zemiError = "";
+
+  try {
+    await apiFetch("/api/students/add_zemi", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        student_id: student.id,
+        text: zemiText,
+        teacher: zemiTeacher
+      })
+    });
+
+    student = await apiFetch(`/api/students/${id}`, { cache: "no-store" });
+
+    showZemiAddModal = false;
+    zemiText = "";
+    zemiTeacher = "";
+  } catch (e) {
+    zemiError = "保存に失敗しました";
+  }
+}
+
+// ---------------------------------------------------------
+// 部活動・サークル活動追加
+// ---------------------------------------------------------
+async function addBukatsu() {
+  if (!bukatsuText.trim()) {
+    bukatsuError = "内容を入力してください";
+    return;
+  }
+  if (!bukatsuTeacher.trim()) {
+    bukatsuError = "担当者名を入力してください";
+    return;
+  }
+
+  bukatsuError = "";
+
+  try {
+    await apiFetch("/api/students/add_bukatsu", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        student_id: student.id,
+        text: bukatsuText,
+        teacher: bukatsuTeacher
+      })
+    });
+
+    student = await apiFetch(`/api/students/${id}`, { cache: "no-store" });
+
+    showBukatsuAddModal = false;
+    bukatsuText = "";
+    bukatsuTeacher = "";
+  } catch (e) {
+    bukatsuError = "保存に失敗しました";
+  }
+}
+
+// ---------------------------------------------------------
+// 役員情報追加
+// ---------------------------------------------------------
+async function addYakuin() {
+  if (!yakuinText.trim()) {
+    yakuinError = "内容を入力してください";
+    return;
+  }
+  if (!yakuinTeacher.trim()) {
+    yakuinError = "担当者名を入力してください";
+    return;
+  }
+
+  yakuinError = "";
+
+  try {
+    await apiFetch("/api/students/add_yakuin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        student_id: student.id,
+        text: yakuinText,
+        teacher: yakuinTeacher
+      })
+    });
+
+    student = await apiFetch(`/api/students/${id}`, { cache: "no-store" });
+
+    showYakuinAddModal = false;
+    yakuinText = "";
+    yakuinTeacher = "";
+  } catch (e) {
+    yakuinError = "保存に失敗しました";
+  }
+}
 
 
   // ====== SUSPEND / RETURN ======
@@ -651,34 +780,132 @@ async function addMoushiokuri() {
 
     <h3>中学校の申し送り</h3>
 
+    <!-- ========================= -->
+<!-- 中学校からの申し送り（一覧表示） -->
+<!-- ========================= -->
+
+
+{#if student.moushiokuri_history && student.moushiokuri_history.length > 0}
+  <div class="notes-list">
+    {#each student.moushiokuri_history as n}
+      <div class="note-item">
+        <div><strong>日付:</strong> {n.date}</div>
+        <div><strong>担当:</strong> {n.teacher}</div>
+        <div><strong>内容:</strong> {n.text}</div>
+      </div>
+    {/each}
+  </div>
+{:else}
+  <p>申し送りはありません。</p>
+{/if}
+
     <button on:click={() => showMoushiokuriModal = true}>
-      申し送りを見る
+      申し送りを入力する
     </button>
 
 
-    <h3>指導履歴</h3>
+    <!-- ========================= -->
+<!-- 指導履歴（一覧表示） -->
+<!-- ========================= -->
+<h3>指導履歴</h3>
 
-    <button on:click={() => showShidouModal = true}>
-      指導履歴を見る
-    </button>
+{#if student.shidou_history && student.shidou_history.length > 0}
+  <div class="guidance-list">
+    {#each student.shidou_history as g}
+      <div class="guidance-item">
+        <div><strong>日付:</strong> {g.date}</div>
+        <div><strong>担当:</strong> {g.teacher || "-"}</div>
+        <div><strong>内容:</strong> {g.text}</div>
+      </div>
+    {/each}
+  </div>
+{:else}
+  <p>指導履歴はありません。</p>
+{/if}
+
+<button on:click={() => showShidouModal = true}>
+  指導内容を入力する
+</button>
+
+<!-- ========================= -->
+<!-- ゼミ活動 -->
+<!-- ========================= -->
+<h2>ゼミ活動</h2>
+
+{#if student.zemi_history && student.zemi_history.length > 0}
+  <div class="notes-list">
+    {#each student.zemi_history as z}
+      <div class="note-item">
+        <div><strong>学年:</strong> {z.grade || "-"}</div>
+        <div><strong>担当:</strong> {z.teacher || "-"}</div>
+        <div><strong>内容:</strong> {z.text}</div>
+      </div>
+    {/each}
+  </div>
+{:else}
+  <p>記録はありません。</p>
+{/if}
+
+<button on:click={() => showZemiAddModal = true}>追加</button>
+
+<br /><br />
+
+<!-- ========================= -->
+<!-- 部活動・サークル活動 -->
+<!-- ========================= -->
+<h2>部活動・サークル活動</h2>
+
+{#if student.bukatsu_history && student.bukatsu_history.length > 0}
+  <div class="notes-list">
+    {#each student.bukatsu_history as b}
+      <div class="note-item">
+        <div><strong>学年:</strong> {b.grade || "-"}</div>
+        <div><strong>担当:</strong> {b.teacher || "-"}</div>
+        <div><strong>内容:</strong> {b.text}</div>
+      </div>
+    {/each}
+  </div>
+{:else}
+  <p>記録はありません。</p>
+{/if}
+
+<button on:click={() => showBukatsuAddModal = true}>追加</button>
+
+<br /><br />
+
+<!-- ========================= -->
+<!-- 役員情報 -->
+<!-- ========================= -->
+<h2>役員情報</h2>
+
+{#if student.yakuin_history && student.yakuin_history.length > 0}
+  <div class="notes-list">
+    {#each student.yakuin_history as y}
+      <div class="note-item">
+        <div><strong>学年:</strong> {y.grade || "-"}</div>
+        <div><strong>担当:</strong> {y.teacher || "-"}</div>
+        <div><strong>内容:</strong> {y.text}</div>
+      </div>
+    {/each}
+  </div>
+{:else}
+  <p>記録はありません。</p>
+{/if}
+
+<button on:click={() => showYakuinAddModal = true}>追加</button>
+
+
+
+
+ 
 
     {#if showMoushiokuriModal}
     <div class="modal-backdrop">
       <div class="modal large">
         <h3>中学校からの申し送り</h3>
+        
     
-        {#if student.moushiokuri_history && student.moushiokuri_history.length > 0}
-          <ul class="shidou-list">
-            {#each student.moushiokuri_history as entry}
-              <li>
-                <strong>{entry.date}</strong>（{entry.teacher}）<br />
-                {entry.text}
-              </li>
-            {/each}
-          </ul>
-        {:else}
-          <p>申し送りはありません。</p>
-        {/if}
+
     
         <div class="actions">
           <button on:click={() => showMoushiokuriAddModal = true}>＋ 追加</button>
@@ -727,18 +954,6 @@ async function addMoushiokuri() {
   <div class="modal" style="width: 500px; max-height: 80vh; overflow-y: auto;">
     <h3>指導履歴</h3>
 
-    {#if student.shidou_history && student.shidou_history.length > 0}
-      <ul class="shidou-list">
-        {#each student.shidou_history as entry}
-          <li>
-            <strong>{entry.date}</strong>（{entry.teacher}）<br />
-            {entry.text}
-          </li>
-        {/each}
-      </ul>
-    {:else}
-      <p>指導履歴はありません。</p>
-    {/if}
 
     <div class="actions">
       <button on:click={() => showShidouAddModal = true}>＋ 追加</button>
@@ -1019,6 +1234,84 @@ async function addMoushiokuri() {
 </div>
 {/if}
 
+{#if showZemiAddModal}
+  <div class="modal-backdrop">
+    <div class="modal-box">
+
+      <h3>ゼミ活動の追加</h3>
+
+      <label>内容</label>
+      <textarea bind:value={zemiText} rows="4"></textarea>
+
+      <label>担当者</label>
+      <input type="text" bind:value={zemiTeacher} />
+
+      {#if zemiError}
+        <p class="error">{zemiError}</p>
+      {/if}
+
+      <div class="modal-buttons">
+        <button on:click={addZemi}>保存</button>
+        <button class="cancel" on:click={() => showZemiAddModal = false}>キャンセル</button>
+      </div>
+
+    </div>
+  </div>
+{/if}
+
+
+{#if showBukatsuAddModal}
+  <div class="modal-backdrop">
+    <div class="modal-box">
+
+      <h3>部活動・サークル活動の追加</h3>
+
+      <label>内容</label>
+      <textarea bind:value={bukatsuText} rows="4"></textarea>
+
+      <label>担当者</label>
+      <input type="text" bind:value={bukatsuTeacher} />
+
+      {#if bukatsuError}
+        <p class="error">{bukatsuError}</p>
+      {/if}
+
+      <div class="modal-buttons">
+        <button on:click={addBukatsu}>保存</button>
+        <button class="cancel" on:click={() => showBukatsuAddModal = false}>キャンセル</button>
+      </div>
+
+    </div>
+  </div>
+{/if}
+
+
+{#if showYakuinAddModal}
+  <div class="modal-backdrop">
+    <div class="modal-box">
+
+      <h3>役員情報の追加</h3>
+
+      <label>内容</label>
+      <textarea bind:value={yakuinText} rows="4"></textarea>
+
+      <label>担当者</label>
+      <input type="text" bind:value={yakuinTeacher} />
+
+      {#if yakuinError}
+        <p class="error">{yakuinError}</p>
+      {/if}
+
+      <div class="modal-buttons">
+        <button on:click={addYakuin}>保存</button>
+        <button class="cancel" on:click={() => showYakuinAddModal = false}>キャンセル</button>
+      </div>
+
+    </div>
+  </div>
+{/if}
+
+
 
 
 
@@ -1149,6 +1442,55 @@ async function addMoushiokuri() {
   overflow-y: auto;        /* ativa scroll interno */
   border-radius: 10px;
 }
+
+.guidance-item,
+.note-item {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.guidance-item strong,
+.note-item strong {
+  display: inline-block;
+  width: 60px;
+}
+
+
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+  }
+
+  .modal-box {
+    background: white;
+    padding: 20px;
+    width: 400px;
+    border-radius: 8px;
+  }
+
+  .modal-buttons {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+  }
+
+  .cancel {
+    background: #ccc;
+  }
+
+  .error {
+    color: red;
+    margin-top: 5px;
+  }
 
 
 

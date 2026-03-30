@@ -3,6 +3,45 @@
     import { browser } from "$app/environment";
     import { apiFetch } from "$lib/api";
   
+    // -------------------------
+    // FUNÇÕES DEVEM VIR ANTES DOS $:
+    // -------------------------
+  
+    function normalizeClassName(c) {
+      if (!c) return "999組";
+      c = c.trim().replace(/\s+/g, "");
+      c = c.replace(/[０-９]/g, d => String.fromCharCode(d.charCodeAt(0) - 0xFEE0));
+      if (/^\d+$/.test(c)) return c + "組";
+      if (/^\d+組$/.test(c)) return c;
+      if (/^0\d+組$/.test(c)) return c.replace(/^0+/, "");
+      if (!c.includes("組")) return c + "組";
+      return c;
+    }
+  
+    function sortByGradeClass(a, b) {
+      const ga = Number(a.grade);
+      const gb = Number(b.grade);
+      if (ga !== gb) return ga - gb;
+  
+      const ca = normalizeClassName(a.class_name).replace("組", "");
+      const cb = normalizeClassName(b.class_name).replace("組", "");
+  
+      const na = Number(ca);
+      const nb = Number(cb);
+  
+      if (!isNaN(na) && !isNaN(nb)) return na - nb;
+  
+      return ca.localeCompare(cb, "ja");
+    }
+  
+    function displayStatus(status) {
+      return status === "在籍" ? "在学" : status;
+    }
+  
+    // -------------------------
+    // VARIÁVEIS
+    // -------------------------
+  
     let students = [];
     let studentStats = {};
   
@@ -26,23 +65,14 @@
       loading = true;
   
       try {
-        // ① 生徒一覧
         let data = await apiFetch(`/api/students/all`);
-
-
-
         students = data;
   
-        // 中学校一覧
         juniorHighList = [...new Set(data.map(s => s.junior_high).filter(Boolean))]
-            .sort((a, b) => a.localeCompare(b, "ja"));
-
-
-const statsAll = await apiFetch("/api/attendance_stats/stats/all");
-studentStats = statsAll.student_stats;
-
-
-
+          .sort((a, b) => a.localeCompare(b, "ja"));
+  
+        const statsAll = await apiFetch("/api/attendance_stats/stats/all");
+        studentStats = statsAll.student_stats;
   
       } catch (e) {
         console.error(e);
@@ -61,19 +91,23 @@ studentStats = statsAll.student_stats;
         ? students
         : students.filter(s => s.junior_high === juniorHigh);
   
-    // 出席番号順
-    $: sortedStudents = [...filteredStudents].sort((a, b) => {
-      const na = Number(String(a.attend_no).replace(/\D/g, ""));
-      const nb = Number(String(b.attend_no).replace(/\D/g, ""));
-      return na - nb;
-    });
-
-
-    function displayStatus(status) {
-  return status === "在籍" ? "在学" : status;
-}
-
+    // -------------------------
+    // ⭐⭐ COLE O SORT AQUI ⭐⭐
+    // -------------------------
+    $: sortedStudents = [...filteredStudents]
+      .sort((a, b) => {
+        const r = sortByGradeClass(a, b);
+        if (r !== 0) return r;
+  
+        const na = Number(String(a.attend_no).replace(/\D/g, ""));
+        const nb = Number(String(b.attend_no).replace(/\D/g, ""));
+        return na - nb;
+      });
+  
   </script>
+  
+  
+  
   
   <h1>出身中学校別 出席簿</h1>
   
@@ -95,6 +129,8 @@ studentStats = statsAll.student_stats;
   {:else if sortedStudents.length === 0}
     <p>該当する生徒がいません。</p>
   {:else}
+
+
   
   <div class="table-wrapper">
   <table class="students-table" border="1" cellpadding="6">
@@ -103,7 +139,7 @@ studentStats = statsAll.student_stats;
           <th rowspan="2" class="vertical-header">学年</th>
           <th rowspan="2" class="vertical-header">クラス</th>
           <th rowspan="2">名前</th>
-          <th rowspan="2" class="vertical-header">通学状況</th>
+          <th rowspan="2" class="vertical-header">在学状況</th>
 
       
           <th colspan="10" class="term-header">前期</th>
@@ -152,6 +188,8 @@ studentStats = statsAll.student_stats;
       
   
       <tbody>
+
+
         {#each sortedStudents as s}
           <tr>
             <td>{s.grade}</td>
