@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
   import { apiFetch } from "$lib/api";
+  import { goto } from "$app/navigation";
 
   // -------------------------
   // エラーダイアログ
@@ -160,6 +161,16 @@
 </script>
 
 <h1>生徒一覧</h1>
+
+<button
+class="zenki-button"
+on:click={() => goto(`/students/jrhigh`)}
+>
+中学校別リスト
+</button>
+
+<br /><br />
+
 
 <!-- コース選択 -->
 <label>コースを選択：</label>
