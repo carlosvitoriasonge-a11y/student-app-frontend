@@ -367,13 +367,17 @@ $: {
               color: {statusTextColor(attendance?.students?.[String(seat.student_id)] ?? '未記録')};
             "
             on:contextmenu|preventDefault
+            on:touchstart|preventDefault
+            on:touchend|preventDefault
+            on:touchmove|preventDefault
             on:click={() => { if (!longPressTriggered) attendanceStore.setStatus(String(seat.student_id)); }}
             on:pointerdown={() => startLongPress(seat.student_id)}
             on:pointerup={endLongPress}
-            on:pointerleave={endLongPress}
+           on:pointerleave={endLongPress}
           >
+
             {#if getStudent(seat.student_id)}
-              <div class="seat-name">{getStudent(seat.student_id).name}</div>
+             <div class="seat-name">{getStudent(seat.student_id).name}</div>
               <div class="seat-kana">{getStudent(seat.student_id).kana}</div>
             {/if}
 
@@ -421,18 +425,23 @@ $: {
           {@const allocated = (attendance?.seats || []).some(seat => String(seat?.student_id ?? "") === sid)}
 
           <li
-            class="student-item"
-            style="
-              opacity: {allocated ? 0.9 : 1};
-              cursor: pointer;
-              background-color: {statusColor(attendance?.students?.[sid] ?? '未記録')};
-              color: {statusTextColor(attendance?.students?.[sid] ?? '未記録')};
-            "
-            on:click={() => { if (!longPressTriggered) attendanceStore.setStatus(sid); }}
-            on:pointerdown={() => startLongPress(sid)}
-            on:pointerup={endLongPress}
-            on:pointerleave={endLongPress}
-          >
+  class="student-item"
+  style="
+    opacity: {allocated ? 0.9 : 1};
+    cursor: pointer;
+    background-color: {statusColor(attendance?.students?.[sid] ?? '未記録')};
+    color: {statusTextColor(attendance?.students?.[sid] ?? '未記録')};
+  "
+  on:contextmenu|preventDefault
+  on:touchstart|preventDefault
+  on:touchend|preventDefault
+  on:touchmove|preventDefault
+  on:click={() => { if (!longPressTriggered) attendanceStore.setStatus(sid); }}
+  on:pointerdown={() => startLongPress(sid)}
+  on:pointerup={endLongPress}
+  on:pointerleave={endLongPress}
+>
+
 
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <div>
@@ -484,7 +493,9 @@ $: {
         on:error={(e) => { e.target.onerror = null; e.target.src = '/images/avatar-placeholder.png'; }}
         width="180"
         height="180"
-        style="object-fit:cover; border-radius:6px;"
+        style="object-fit:cover; border-radius:6px;,pointer-events:none;"
+        on:contextmenu|preventDefault
+        
       />
     {:else}
       <div class="no-photo-text">写真が登録されていません。</div>
