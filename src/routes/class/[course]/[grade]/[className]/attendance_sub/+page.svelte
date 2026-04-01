@@ -641,17 +641,21 @@
               <div style={`grid-column: ${c + 1}; grid-row: ${r + 1};`}>
                 {#if seat !== null}
                   {#if seat?.student_id && getStudent(seat.student_id)?.status !== "休学"}
-                    <div
-                      class="seat"
-                      style="
-                        background-color: {statusColor(studentsStatus[String(seat.student_id)] ?? '未記録')};
-                        color: {statusTextColor(studentsStatus[String(seat.student_id)] ?? '未記録')};
-                      "
-                      on:click={() => { if (!longPressTriggered) setStatus(seat.student_id); }}
-                      on:pointerdown={() => startLongPress(seat.student_id)}
-                      on:pointerup={endLongPress}
-                      on:pointerleave={endLongPress}
-                    >
+                  <div
+                  class="seat"
+                  style="
+                    background-color: {statusColor(studentsStatus[String(seat.student_id)] ?? '未記録')};
+                    color: {statusTextColor(studentsStatus[String(seat.student_id)] ?? '未記録')};
+                  "
+                  on:contextmenu|preventDefault
+                  on:touchstart|preventDefault
+                  on:touchend|preventDefault
+                  on:touchmove|preventDefault
+                  on:click={() => { if (!longPressTriggered) setStatus(seat.student_id); }}
+                  on:pointerdown={() => startLongPress(seat.student_id)}
+                  on:pointerup={endLongPress}
+                  on:pointerleave={endLongPress}
+                >
                       {#if getStudent(seat.student_id)}
                         <div class="seat-name">{getStudent(seat.student_id).name}</div>
                         <div class="seat-kana">{getStudent(seat.student_id).kana}</div>
@@ -693,18 +697,17 @@
             {@const allocated = (attendance?.seats || []).some(seat => String(seat?.student_id ?? "") === sid)}
   
             <li
-              class="student-item"
-              style="
-                opacity: {allocated ? 0.9 : 1};
-                cursor: pointer;
-                background-color: {statusColor(studentsStatus[sid] ?? '未記録')};
-                color: {statusTextColor(studentsStatus[sid] ?? '未記録')};
-              "
-              on:click={() => { if (!longPressTriggered) setStatus(sid); }}
-              on:pointerdown={() => startLongPress(sid)}
-              on:pointerup={endLongPress}
-              on:pointerleave={endLongPress}
-            >
+  class="student-item"
+  style="..."
+  on:contextmenu|preventDefault
+  on:touchstart|preventDefault
+  on:touchend|preventDefault
+  on:touchmove|preventDefault
+  on:click={() => { if (!longPressTriggered) setStatus(sid); }}
+  on:pointerdown={() => startLongPress(sid)}
+  on:pointerup={endLongPress}
+  on:pointerleave={endLongPress}
+>
               <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div>
                   <div style="font-weight:600;">{student.attend_no}番 {student.name}</div>
