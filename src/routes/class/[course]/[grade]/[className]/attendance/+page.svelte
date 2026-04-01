@@ -247,9 +247,7 @@ $: {
     line-height: 1.05;
   word-break: break-word;
   overflow: hidden;
-
   font-size: clamp(0.45rem, 3cqw, 0.85rem);
-
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -282,7 +280,7 @@ $: {
   text-overflow: ellipsis;
 }
 
-.grid, .grid *, .seat, .seat * {
+.grid, .grid *, .seat, .seat *, .student-item, .student-item * {
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
