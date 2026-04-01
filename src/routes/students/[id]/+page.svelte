@@ -199,17 +199,16 @@ async function addMoushiokuri() {
   }
 }
 
-// ---------------------------------------------------------
-// ゼミ活動追加
-// ---------------------------------------------------------
-
+// ====== ZEMI 活動 ======
+let zemiGrade = "";   // ⭐ NOVO
+let showZemiModal = false;
+let showZemiAddModal = false;
 let zemiText = "";
 let zemiTeacher = "";
 let zemiError = "";
-let showZemiAddModal = false;
 
-
-// ====== 部活動・サークル活動 ======
+// ====== 部活動 ======
+let bukatsuGrade = "";   // ⭐ NOVO
 let showBukatsuModal = false;
 let showBukatsuAddModal = false;
 let bukatsuText = "";
@@ -217,12 +216,12 @@ let bukatsuTeacher = "";
 let bukatsuError = "";
 
 // ====== 役員情報 ======
+let yakuinGrade = "";   // ⭐ NOVO
 let showYakuinModal = false;
 let showYakuinAddModal = false;
 let yakuinText = "";
 let yakuinTeacher = "";
 let yakuinError = "";
-
 
 async function addZemi() {
   if (!zemiText.trim()) {
@@ -243,7 +242,8 @@ async function addZemi() {
       body: JSON.stringify({
         student_id: student.id,
         text: zemiText,
-        teacher: zemiTeacher
+        teacher: zemiTeacher,
+        grade: zemiGrade   // ⭐ NOVO
       })
     });
 
@@ -279,7 +279,8 @@ async function addBukatsu() {
       body: JSON.stringify({
         student_id: student.id,
         text: bukatsuText,
-        teacher: bukatsuTeacher
+        teacher: bukatsuTeacher,
+        grade: zemiGrade   // ⭐ NOVO
       })
     });
 
@@ -315,7 +316,8 @@ async function addYakuin() {
       body: JSON.stringify({
         student_id: student.id,
         text: yakuinText,
-        teacher: yakuinTeacher
+        teacher: yakuinTeacher,
+        grade: zemiGrade   // ⭐ NOVO
       })
     });
 
@@ -778,7 +780,7 @@ async function addYakuin() {
     {/if}
 
 
-    <h3>中学校の申し送り</h3>
+    <h3>中学校からの申し送り</h3>
 
     <!-- ========================= -->
 <!-- 中学校からの申し送り（一覧表示） -->
@@ -830,7 +832,7 @@ async function addYakuin() {
 <!-- ========================= -->
 <!-- ゼミ活動 -->
 <!-- ========================= -->
-<h2>ゼミ活動</h2>
+<h2>ゼミ活動・ボランティア活動など</h2>
 
 {#if student.zemi_history && student.zemi_history.length > 0}
   <div class="notes-list">
@@ -1110,10 +1112,11 @@ async function addYakuin() {
     <h3>コース変更</h3>
 
     <select bind:value={newCourse}>
-      <option value="全">全日コース</option>
-      <option value="水">水曜コース</option>
-      <option value="集">集中コース</option>
+      <option value="z">全日コース</option>
+      <option value="w">水曜コース</option>
+      <option value="s">集中コース</option>
     </select>
+    
 
     {#if changeError}
       <p style="color:red">{changeError}</p>
@@ -1240,6 +1243,15 @@ async function addYakuin() {
 
       <h3>ゼミ活動の追加</h3>
 
+      <label>学年</label>
+<select bind:value={zemiGrade}>
+  <option value="">選択してください</option>
+  <option value="1年">1年</option>
+  <option value="2年">2年</option>
+  <option value="3年">3年</option>
+</select>
+
+
       <label>内容</label>
       <textarea bind:value={zemiText} rows="4"></textarea>
 
@@ -1266,6 +1278,15 @@ async function addYakuin() {
 
       <h3>部活動・サークル活動の追加</h3>
 
+      <label>学年</label>
+<select bind:value={bukatsuGrade}>
+  <option value="">選択してください</option>
+  <option value="1年">1年</option>
+  <option value="2年">2年</option>
+  <option value="3年">3年</option>
+</select>
+
+
       <label>内容</label>
       <textarea bind:value={bukatsuText} rows="4"></textarea>
 
@@ -1291,6 +1312,15 @@ async function addYakuin() {
     <div class="modal-box">
 
       <h3>役員情報の追加</h3>
+
+      <label>学年</label>
+<select bind:value={yakuinGrade}>
+  <option value="">選択してください</option>
+  <option value="1年">1年</option>
+  <option value="2年">2年</option>
+  <option value="3年">3年</option>
+</select>
+
 
       <label>内容</label>
       <textarea bind:value={yakuinText} rows="4"></textarea>
