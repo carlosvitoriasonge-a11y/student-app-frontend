@@ -291,6 +291,10 @@ $: {
     touch-action: manipulation;
 }
 
+* {
+  -webkit-touch-callout: none;
+}
+
 
 
 
