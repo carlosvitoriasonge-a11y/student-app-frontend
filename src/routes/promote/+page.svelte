@@ -70,9 +70,6 @@
             .filter(s => !course || s.course === course)
         : [];
 
-    promote_ids = promote_ids.filter(id =>
-      filteredStudents.some(s => s.id === id)
-    );
   } else {
     filteredStudents = [];
     promote_ids = [];

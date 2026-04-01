@@ -291,6 +291,13 @@ $: {
     touch-action: manipulation;
 }
 
+* {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+
 
 
 
@@ -359,6 +366,7 @@ $: {
               background-color: {statusColor(attendance?.students?.[String(seat.student_id)] ?? '未記録')};
               color: {statusTextColor(attendance?.students?.[String(seat.student_id)] ?? '未記録')};
             "
+            on:contextmenu|preventDefault
             on:click={() => { if (!longPressTriggered) attendanceStore.setStatus(String(seat.student_id)); }}
             on:pointerdown={() => startLongPress(seat.student_id)}
             on:pointerup={endLongPress}
