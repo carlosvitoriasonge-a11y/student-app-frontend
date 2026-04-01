@@ -293,8 +293,6 @@ $: {
 
 * {
   -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
 }
 
 
@@ -367,9 +365,6 @@ $: {
               color: {statusTextColor(attendance?.students?.[String(seat.student_id)] ?? '未記録')};
             "
             on:contextmenu|preventDefault
-            on:touchstart|preventDefault
-            on:touchend|preventDefault
-            on:touchmove|preventDefault
             on:click={() => { if (!longPressTriggered) attendanceStore.setStatus(String(seat.student_id)); }}
             on:pointerdown={() => startLongPress(seat.student_id)}
             on:pointerup={endLongPress}
@@ -433,9 +428,6 @@ $: {
     color: {statusTextColor(attendance?.students?.[sid] ?? '未記録')};
   "
   on:contextmenu|preventDefault
-  on:touchstart|preventDefault
-  on:touchend|preventDefault
-  on:touchmove|preventDefault
   on:click={() => { if (!longPressTriggered) attendanceStore.setStatus(sid); }}
   on:pointerdown={() => startLongPress(sid)}
   on:pointerup={endLongPress}

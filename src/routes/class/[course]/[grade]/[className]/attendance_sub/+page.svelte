@@ -561,7 +561,7 @@
   animation: fadeIn 0.2s ease-out;
 }
 
-.grid, .grid *, .seat, .seat * {
+.grid, .grid *, .seat, .seat *, .student-item, .student-item * {
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -575,6 +575,11 @@
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+* {
+  -webkit-touch-callout: none;
+}
+
 
 
   </style>
@@ -648,9 +653,6 @@
                     color: {statusTextColor(studentsStatus[String(seat.student_id)] ?? '未記録')};
                   "
                   on:contextmenu|preventDefault
-                  on:touchstart|preventDefault
-                  on:touchend|preventDefault
-                  on:touchmove|preventDefault
                   on:click={() => { if (!longPressTriggered) setStatus(seat.student_id); }}
                   on:pointerdown={() => startLongPress(seat.student_id)}
                   on:pointerup={endLongPress}
@@ -698,11 +700,13 @@
   
             <li
   class="student-item"
-  style="..."
+  style="
+                opacity: {allocated ? 0.9 : 1};
+                cursor: pointer;
+                background-color: {statusColor(studentsStatus[sid] ?? '未記録')};
+                color: {statusTextColor(studentsStatus[sid] ?? '未記録')};
+              "
   on:contextmenu|preventDefault
-  on:touchstart|preventDefault
-  on:touchend|preventDefault
-  on:touchmove|preventDefault
   on:click={() => { if (!longPressTriggered) setStatus(sid); }}
   on:pointerdown={() => startLongPress(sid)}
   on:pointerup={endLongPress}
