@@ -492,8 +492,6 @@
   margin-top: 8px;
 }
 
-.layout-switch button 
-  
   
 .modal-backdrop {
   position: fixed;
