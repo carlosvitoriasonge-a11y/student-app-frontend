@@ -608,52 +608,53 @@ $: maxRows =
       {#if seats.length}
         <div class="seating-grid">
           {#each Array(maxRows) as _, r}
-            <div class="row" style={`--cols: ${maxCols}`}>
-              {#each Array(maxCols) as _, c}
+  <div class="row" style={`--cols: ${maxCols}`}>
+    {#each Array(maxCols) as _, c}
 
-                {@const rReal = viewMode === 'teacher' ? maxRows - 1 - r : r}
-                {@const cReal = viewMode === 'teacher' ? maxCols - 1 - c : c}
+      {@const rReal = viewMode === 'teacher' ? maxRows - 1 - r : r}
+      {@const cReal = viewMode === 'teacher' ? maxCols - 1 - c : c}
+      {@const index = rReal * maxCols + cReal}
+      {@const seat = seats[index]}
 
-                {#key `${rReal}-${cReal}`}
-                  <div
-                    class={`seat 
-                      ${seats[rReal * maxCols + cReal].active ? 'active' : 'inactive'} 
-                      ${isDragging && seats[rReal * maxCols + cReal].active ? 'drop-ready' : ''} 
-                      ${hoverSeatKey === seatKey(rReal + 1, cReal + 1) ? 'drop-hover' : ''}
-                    `}
-                                        on:click={() => handleSeatTap(rReal + 1, cReal + 1)}
-                    on:dragover={(e) => handleSeatDragOver(e, seats[rReal * maxCols + cReal])}
-                    on:dragleave={(e) => handleSeatDragLeave(e, seats[rReal * maxCols + cReal])}
-                    on:drop={(e) => handleSeatDrop(e, seats[rReal * maxCols + cReal])}
-                  >
-                    {#if seats[rReal * maxCols + cReal].active}
-                      {#if seats[rReal * maxCols + cReal].student_id}
-                        <span
-                          class="student-name"
-                          draggable="true"
-                          on:dragstart={(e) =>
-                            handleStudentDragStart(
-                              e,
-                              seats[rReal * maxCols + cReal].student_id
-                            )
-                          }
-                          on:dragend={handleStudentDragEnd}
-                        >
-                          {studentName(seats[rReal * maxCols + cReal].student_id)}
-                        </span>
-                      {:else}
-                        <span class="seat-number">
-                          {rReal + 1}-{colLetter(cReal + 1)}
-                        </span>
-                      {/if}
-                    {:else}
-                      <span class="inactive-mark">×</span>
-                    {/if}
-                  </div>
-                {/key}
-              {/each}
-            </div>
-          {/each}
+      {#if seat}
+        {#key `${rReal}-${cReal}`}
+          <div
+            class={`seat 
+              ${seat.active ? 'active' : 'inactive'} 
+              ${isDragging && seat.active ? 'drop-ready' : ''} 
+              ${hoverSeatKey === seatKey(rReal + 1, cReal + 1) ? 'drop-hover' : ''}
+            `}
+            on:click={() => handleSeatTap(rReal + 1, cReal + 1)}
+            on:dragover={(e) => handleSeatDragOver(e, seat)}
+            on:dragleave={(e) => handleSeatDragLeave(e, seat)}
+            on:drop={(e) => handleSeatDrop(e, seat)}
+          >
+            {#if seat.active}
+              {#if seat.student_id}
+                <span
+                  class="student-name"
+                  draggable="true"
+                  on:dragstart={(e) => handleStudentDragStart(e, seat.student_id)}
+                  on:dragend={handleStudentDragEnd}
+                >
+                  {studentName(seat.student_id)}
+                </span>
+              {:else}
+                <span class="seat-number">
+                  {rReal + 1}-{colLetter(cReal + 1)}
+                </span>
+              {/if}
+            {:else}
+              <span class="inactive-mark">×</span>
+            {/if}
+          </div>
+        {/key}
+      {/if}
+
+    {/each}
+  </div>
+{/each}
+
         </div>
       {/if}
 
