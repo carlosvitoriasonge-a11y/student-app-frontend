@@ -81,6 +81,47 @@ $: if (students.length > 0) {
     active: boolean;
     student_id: string | null;
   };
+// --- PATCH: O NÚMERO DE ALUNOS MANDA MAIS QUE O SEATING.JSON ---
+function generateGrid(total) {
+  const rows = 5;
+  const cols = Math.ceil(total / rows);
+  const seats = [];
+
+  for (let r = 1; r <= rows; r++) {
+    for (let c = 1; c <= cols; c++) {
+      seats.push({
+        row: r,
+        col: c,
+        student_id: null,
+        active: true
+      });
+    }
+  }
+
+  return { seats, rows, cols };
+}
+
+$: if (students?.length > 0 && (seatingType === "auto" || seatingType === "custom")) {
+  const total = Math.min(students.length, 35);
+  const required = total <= 30 ? 30 : 35;
+
+  // expandir
+  if (seats.length < required) {
+    const { seats: newSeats, rows, cols } = generateGrid(required);
+    seats = newSeats;
+    maxRows = rows;
+    maxCols = cols;
+  }
+
+  // reduzir
+  if (seats.length > required) {
+    seats = seats.slice(0, required);
+    const rows = 5;
+    const cols = Math.ceil(required / rows);
+    maxRows = rows;
+    maxCols = cols;
+  }
+}
 
 
 
