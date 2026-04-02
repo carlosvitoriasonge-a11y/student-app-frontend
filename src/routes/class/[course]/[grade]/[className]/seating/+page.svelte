@@ -247,6 +247,43 @@ $: if (students?.length > 0 && (seatingType === "auto" || seatingType === "custo
     }
   });
 
+  // --- PATCH FINAL: ajustar AUTO/CUSTOM após backend carregar ---
+$: if (students.length > 0 && autoSeats.length > 0 && customSeats.length > 0) {
+
+const total = Math.min(students.length, 35);
+const required = total <= 30 ? 30 : 35;
+
+// AUTO — recalcular sempre (AUTO ignora seating.json)
+if (seatingType === "auto") {
+  const { seats: newSeats, rows, cols } = generateGrid(required);
+
+  // preservar student_id
+  autoSeats = newSeats.map((seat, i) => ({
+    ...seat,
+    student_id: autoSeats[i]?.student_id ?? null
+  }));
+
+  maxRows = rows;
+  maxCols = cols;
+}
+
+// CUSTOM — só ajustar se seating.json estiver errado
+if (seatingType === "custom") {
+  if (customSeats.length !== required) {
+    const { seats: newSeats, rows, cols } = generateGrid(required);
+
+    customSeats = newSeats.map((seat, i) => ({
+      ...seat,
+      student_id: customSeats[i]?.student_id ?? null
+    }));
+
+    maxRows = rows;
+    maxCols = cols;
+  }
+}
+}
+
+
 
 
   // -----------------------------
