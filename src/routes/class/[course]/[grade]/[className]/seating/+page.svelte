@@ -23,21 +23,19 @@
     }
   });
 
-  // -----------------------------
-// AJUSTE DINÂMICO DO AUTO/CUSTOM (máximo 35)
-// -----------------------------
+ // --- PATCH: NÃO RECRIAR AUTO/CUSTOM ---
+// AUTO/CUSTOM devem usar o layout REAL do backend
 $: if (students.length > 0) {
-  const total = Math.min(students.length, 35); // limite máximo 35
+  const total = Math.min(students.length, 35);
+  const rows = baseRows;
 
-  const rows = baseRows; // 5 linhas fixas
-
-  // calcula colunas necessárias, mas nunca menos que 6
+  // mantém cálculo para A/B/C
   baseCols = Math.max(6, Math.ceil(total / rows));
 
-  // recria grids auto/custom com o novo tamanho
-  autoSeats = defaultGrid();
-  customSeats = defaultGrid();
+  // NÃO recria autoSeats/customSeats aqui
+  // eles serão carregados do backend no onMount
 }
+
 
 
   
