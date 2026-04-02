@@ -15,7 +15,6 @@
         `/api/students/filter?grade=${grade}&class_name=${className}&course=${course}`
       );
 
-      // filtra 休学
       students = data.filter(s => s.status !== "休学");
 
     } catch (err) {
@@ -24,56 +23,56 @@
   });
 
   // -----------------------------
-// AJUSTE DINÂMICO DO AUTO/CUSTOM (máximo 35)
-// -----------------------------
+  // AJUSTE DINÂMICO DO AUTO/CUSTOM (máximo 35)
+  // -----------------------------
 $: if (students.length > 0) {
-  const total = Math.min(students.length, 35); // limite máximo 35
+  const total = Math.min(students.length, 35);
 
-  const rows = baseRows; // 5 linhas fixas
+  const rows = baseRows;
 
-  // calcula colunas necessárias, mas nunca menos que 6
   baseCols = Math.max(6, Math.ceil(total / rows));
 
-  // recria grids auto/custom com o novo tamanho
   autoSeats = defaultGrid();
   customSeats = defaultGrid();
 }
 
-
-  
-  // mock de alunos (depois vem do backend)
+  // -----------------------------
+  // CONFIGURAÇÃO BASE
+  // -----------------------------
   let baseRows = 5;
   let baseCols = 6;
 
-  // valores reativos usados pelo grid
+  // PATCH A — A/B sempre 12×6 fixos
+  const AB_COLS = 6; // <— FIXO
+
   let maxRows = baseRows;
   let maxCols = baseCols;
-
 
   let isEditing = false;
   let seatingType: 'auto' | 'custom' | 'A' | 'B' | 'C' = 'auto';
   let viewMode: 'teacher' | 'student' = 'teacher';
-  let saving = false
+  let saving = false;
   let saveMessage = "";
 
-  // maxRows/maxCols passam a depender do tipo de layout
-    $: maxCols =
+  // -----------------------------
+  // maxRows / maxCols por layout
+  // -----------------------------
+$: maxCols =
     seatingType === 'C'
       ? 8
-      : baseCols; // baseCols = 6
+      : seatingType === 'A' || seatingType === 'B'
+        ? AB_COLS // PATCH A — A/B fixos em 6 colunas
+        : baseCols;
 
-    $: maxRows =
-      seatingType === 'A' || seatingType === 'B'
+$: maxRows =
+    seatingType === 'A' || seatingType === 'B'
       ? 12
       : seatingType === 'C'
         ? 5
-        : baseRows; // baseRows = 5
-
-
-
+        : baseRows;
 
   // -----------------------------
-  // SEATS (estrutura inicial)
+  // SEATS
   // -----------------------------
   type Seat = {
     row: number;
@@ -83,24 +82,25 @@ $: if (students.length > 0) {
   };
 
   function defaultGrid(): Seat[] {
-  const arr: Seat[] = [];
-  for (let r = 1; r <= baseRows; r++) {
-    for (let c = 1; c <= baseCols; c++) {
-      arr.push({
-        row: r,
-        col: c,
-        active: true,
-        student_id: null
-      });
+    const arr: Seat[] = [];
+    for (let r = 1; r <= baseRows; r++) {
+      for (let c = 1; c <= baseCols; c++) {
+        arr.push({
+          row: r,
+          col: c,
+          active: true,
+          student_id: null
+        });
+      }
     }
+    return arr;
   }
-  return arr;
-}
 
+  // PATCH A — A/B sempre 12×6 fixos
   function defaultGridAB(): Seat[] {
     const arr: Seat[] = [];
     for (let r = 1; r <= 12; r++) {
-      for (let c = 1; c <= baseCols; c++) {
+      for (let c = 1; c <= AB_COLS; c++) { // <— FIXO
         arr.push({
           row: r,
           col: c,
@@ -114,19 +114,18 @@ $: if (students.length > 0) {
 
   function defaultGridC(): Seat[] {
     const arr: Seat[] = [];
-    for (let r = 1; r <= 5; r++) {      // 8 fileiras fixas
-      for (let c = 1; c <= 8; c++) {    // 5 colunas fixas
+    for (let r = 1; r <= 5; r++) {
+      for (let c = 1; c <= 8; c++) {
         arr.push({
           row: r,
           col: c,
           active: true,
           student_id: null
-          });
+        });
       }
     }
-  return arr;
+    return arr;
   }
-
 
   let autoSeats: Seat[] = defaultGrid();
   let customSeats: Seat[] = defaultGrid();
@@ -134,15 +133,12 @@ $: if (students.length > 0) {
   let BSeats: Seat[] = defaultGridAB();
   let CSeats: Seat[] = defaultGridC();
 
-
   $: seats =
     seatingType === "auto" ? autoSeats :
     seatingType === "custom" ? customSeats :
     seatingType === "A" ? ASeats :
-    seatingType === "B" ? BSeats : 
+    seatingType === "B" ? BSeats :
     CSeats;
-
-
 
   function getSeat(row: number, col: number) {
     return seats.find((s) => s.row === row && s.col === col);
@@ -173,33 +169,30 @@ $: if (students.length > 0) {
     return s ? s.name : '';
   }
 
-
   onMount(async () => {
     try {
-      // espera students carregar primeiro
       const wait = () => new Promise(r => setTimeout(r, 50));
       while (students.length === 0) {
         await wait();
       }
 
       const data = await apiFetch(
-       `/api/students/seating?course=${course}&grade=${grade}&class_name=${className}`
+        `/api/students/seating?course=${course}&grade=${grade}&class_name=${className}`
       );
 
-      autoSeats = data.auto?.length ? data.auto : defaultGrid(); 
-      customSeats = data.custom?.length ? data.custom : defaultGrid(); 
-      ASeats = data.A?.length ? data.A : defaultGridAB(); 
-      BSeats = data.B?.length ? data.B : defaultGridAB();
-      CSeats = data.C?.length ? data.C : defaultGridC();
+      autoSeats = data.auto?.length ? data.auto : defaultGrid();
+      customSeats = data.custom?.length ? data.custom : defaultGrid();
 
-      
+      // PATCH A — mantém A/B fixos em 12×6
+      ASeats = data.A?.length ? data.A : defaultGridAB();
+      BSeats = data.B?.length ? data.B : defaultGridAB();
+
+      CSeats = data.C?.length ? data.C : defaultGridC();
 
     } catch (err) {
       console.error("Erro ao carregar seating:", err);
     }
   });
-
-
 
   // -----------------------------
   // DRAG & DROP
@@ -288,39 +281,39 @@ $: if (students.length > 0) {
     event.preventDefault();
   }
 
-  function colLetter(col: number) { 
-      return String.fromCharCode(64 + col); // 1 → A, 2 → B, 3 → C... 
-      }
-  
+  function colLetter(col: number) {
+    return String.fromCharCode(64 + col);
+  }
+
   let lastTapTime = 0;
 
   function handleSeatTap(row: number, col: number) {
-      if(!isEditing) return;
+    if (!isEditing) return;
 
-      const now = Date.now();
-      const timeSince = now - lastTapTime;
+    const now = Date.now();
+    const timeSince = now - lastTapTime;
 
-      if (timeSince < 300) {
-          toggleSeat(row, col);
-      }
+    if (timeSince < 300) {
+      toggleSeat(row, col);
+    }
 
-      lastTapTime = now;
+    lastTapTime = now;
   }
 
   function clearAllSeats() {
     seats.forEach(seat => {
       seat.student_id = null;
     });
-    seats = seats; // força reatividade
+    seats = seats;
   }
 
   function applyAutoSeating() {
-    if(!students.length) return;
+    if (!students.length) return;
 
-    const hasAssigned = autoSeats.some(s =>s.student_id);
+    const hasAssigned = autoSeats.some(s => s.student_id);
     if (hasAssigned) return;
 
-    const seatsCopy = autoSeats.map(s => ({...s}));
+    const seatsCopy = autoSeats.map(s => ({ ...s }));
 
     const sorted = [...students].sort((a, b) => {
       return (a.attend_no ?? 0) - (b.attend_no ?? 0);
@@ -336,115 +329,109 @@ $: if (students.length > 0) {
 
         seat.student_id = sorted[i].id;
         i++;
-
       }
-    } 
-      autoSeats = seatsCopy;
+    }
 
-
+    autoSeats = seatsCopy;
   }
 
   function applyASeating() {
-  if(!students.length) return;
+    if (!students.length) return;
 
-  const hasAssigned = ASeats.some(s => s.student_id);
-  if (hasAssigned) return;
+    const hasAssigned = ASeats.some(s => s.student_id);
+    if (hasAssigned) return;
 
-  const seatsCopy = ASeats.map(s => ({...s}));
+    const seatsCopy = ASeats.map(s => ({ ...s }));
 
-  const sorted = [...students].sort((a, b) => {
-    return (a.attend_no ?? 0) - (b.attend_no ?? 0);
-  });
-
-  let i = 0;
-
-  for (let c = 1; c <= maxCols; c++) {
-    for (let r = 1; r <= maxRows; r++) {
-      const seat = seatsCopy.find(s => s.row === r && s.col === c);
-      if (!seat || !seat.active) continue;
-      if (i >= sorted.length) break;
-
-      seat.student_id = sorted[i].id;
-      i++;
-    }
-  }
-
-  ASeats = seatsCopy;
-}
-
-function applyBSeating() {
-  if(!students.length) return;
-
-  const hasAssigned = BSeats.some(s => s.student_id);
-  if (hasAssigned) return;
-
-  const seatsCopy = BSeats.map(s => ({...s}));
-
-  const sorted = [...students].sort((a, b) => {
-    return (a.attend_no ?? 0) - (b.attend_no ?? 0);
-  });
-
-  let i = 0;
-
-  for (let c = 1; c <= maxCols; c++) {
-    for (let r = 1; r <= maxRows; r++) {
-      const seat = seatsCopy.find(s => s.row === r && s.col === c);
-      if (!seat || !seat.active) continue;
-      if (i >= sorted.length) break;
-
-      seat.student_id = sorted[i].id;
-      i++;
-    }
-  }
-
-  BSeats = seatsCopy;
-}
-
-function applyCSeating() {
-  if (!students.length) return;
-
-  const hasAssigned = CSeats.some(s => s.student_id);
-  if (hasAssigned) return;
-
-  const seatsCopy = CSeats.map(s => ({ ...s }));
-
-  const sorted = [...students].sort((a, b) => {
-    return (a.attend_no ?? 0) - (b.attend_no ?? 0);
-  });
-
-  let i = 0;
-
-  for (let c = 1; c <= 8; c++) {     // 5 colunas fixas
-    for (let r = 1; r <= 5; r++) {   // 8 fileiras fixas
-      const seat = seatsCopy.find(s => s.row === r && s.col === c);
-      if (!seat || !seat.active) continue;
-      if (i >= sorted.length) break;
-
-      seat.student_id = sorted[i].id;
-      i++;
-    }
-  }
-
-  CSeats = seatsCopy;
-}
-
-
-
-  function applyRandomSeating() {
-    if(!isEditing) return;
-    if(seatingType !== 'custom') return;
-    if(!students.length) return;
-
-    const seatsCopy = customSeats.map(s => ({...s}));
-
-    const shuffled = [...students]
-      .sort(() => Math.random() - 0.5);
+    const sorted = [...students].sort((a, b) => {
+      return (a.attend_no ?? 0) - (b.attend_no ?? 0);
+    });
 
     let i = 0;
 
     for (let c = 1; c <= maxCols; c++) {
       for (let r = 1; r <= maxRows; r++) {
+        const seat = seatsCopy.find(s => s.row === r && s.col === c);
+        if (!seat || !seat.active) continue;
+        if (i >= sorted.length) break;
 
+        seat.student_id = sorted[i].id;
+        i++;
+      }
+    }
+
+    ASeats = seatsCopy;
+  }
+
+  function applyBSeating() {
+    if (!students.length) return;
+
+    const hasAssigned = BSeats.some(s => s.student_id);
+    if (hasAssigned) return;
+
+    const seatsCopy = BSeats.map(s => ({ ...s }));
+
+    const sorted = [...students].sort((a, b) => {
+      return (a.attend_no ?? 0) - (b.attend_no ?? 0);
+    });
+
+    let i = 0;
+
+    for (let c = 1; c <= maxCols; c++) {
+      for (let r = 1; r <= maxRows; r++) {
+        const seat = seatsCopy.find(s => s.row === r && s.col === c);
+        if (!seat || !seat.active) continue;
+        if (i >= sorted.length) break;
+
+        seat.student_id = sorted[i].id;
+        i++;
+      }
+    }
+
+    BSeats = seatsCopy;
+  }
+
+  function applyCSeating() {
+    if (!students.length) return;
+
+    const hasAssigned = CSeats.some(s => s.student_id);
+    if (hasAssigned) return;
+
+    const seatsCopy = CSeats.map(s => ({ ...s }));
+
+    const sorted = [...students].sort((a, b) => {
+      return (a.attend_no ?? 0) - (b.attend_no ?? 0);
+    });
+
+    let i = 0;
+
+    for (let c = 1; c <= 8; c++) {
+      for (let r = 1; r <= 5; r++) {
+        const seat = seatsCopy.find(s => s.row === r && s.col === c);
+        if (!seat || !seat.active) continue;
+        if (i >= sorted.length) break;
+
+        seat.student_id = sorted[i].id;
+        i++;
+      }
+    }
+
+    CSeats = seatsCopy;
+  }
+
+  function applyRandomSeating() {
+    if (!isEditing) return;
+    if (seatingType !== 'custom') return;
+    if (!students.length) return;
+
+    const seatsCopy = customSeats.map(s => ({ ...s }));
+
+    const shuffled = [...students].sort(() => Math.random() - 0.5);
+
+    let i = 0;
+
+    for (let c = 1; c <= maxCols; c++) {
+      for (let r = 1; r <= maxRows; r++) {
         const seat = seatsCopy.find(s => s.row === r && s.col === c);
         if (!seat || !seat.active) continue;
 
@@ -452,30 +439,25 @@ function applyCSeating() {
 
         seat.student_id = shuffled[i].id;
         i++;
-
       }
     }
 
-      customSeats = seatsCopy;
-
+    customSeats = seatsCopy;
   }
-
-
 
   async function save() {
     try {
       saving = true;
       saveMessage = "";
 
-
       await apiFetch("/api/students/seating/save", {
         method: "POST",
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           course,
           grade,
           class_name: className,
           type: seatingType,
-          seats 
+          seats
         })
       });
 
@@ -493,11 +475,7 @@ function applyCSeating() {
       saving = false;
     }
   }
-
 </script>
-
-
-
 
 <svelte:head>
   <title>座席表</title>
@@ -513,7 +491,7 @@ function applyCSeating() {
           class:selected={seatingType === 'auto'}
           on:click={() => {
             seatingType = 'auto';
-            if(isEditing){
+            if (isEditing) {
               applyAutoSeating();
             }
           }}
@@ -528,46 +506,41 @@ function applyCSeating() {
           {course === "全" ? "カスタム" : "別室"}
         </button>
 
-
         <button
           class:selected={seatingType === 'A'}
           on:click={() => {
-          seatingType = 'A';
+            seatingType = 'A';
             if (isEditing) {
               applyASeating();
             }
           }}
         >
-        A
+          A
         </button>
 
         <button
           class:selected={seatingType === 'B'}
           on:click={() => {
-          seatingType = 'B';
+            seatingType = 'B';
             if (isEditing) {
               applyBSeating();
             }
           }}
         >
-        B
+          B
         </button>
 
         <button
           class:selected={seatingType === 'C'}
           on:click={() => {
-          seatingType = 'C';
-          if (isEditing) {
-            applyCSeating();
-          }
+            seatingType = 'C';
+            if (isEditing) {
+              applyCSeating();
+            }
           }}
         >
-        C
+          C
         </button>
-
-
-      
-
       </div>
     </div>
 
@@ -594,41 +567,33 @@ function applyCSeating() {
         ランダム
       </button>
 
-
       {#if !isEditing}
-          <button
-              class="primary"
-              on:click={() => {
-                  viewMode = 'student';   // força entrar no student view
-                  isEditing = true;       // ativa edição
-              }}
-          >
-              編集
-          </button>
-
+        <button
+          class="primary"
+          on:click={() => {
+            viewMode = 'student';
+            isEditing = true;
+          }}
+        >
+          編集
+        </button>
 
       {:else}
-          <button on:click={() => isEditing = false}>
-              キャンセル
-          </button>
+        <button on:click={() => isEditing = false}>
+          キャンセル
+        </button>
 
-          <button on:click={clearAllSeats}>
-            全てクリア
-          </button>
+        <button on:click={clearAllSeats}>
+          全てクリア
+        </button>
 
-          <button class="primary" on:click={save}>
-            保存
-          </button>
-          
+        <button class="primary" on:click={save}>
+          保存
+        </button>
 
-          <!-- ⬇️ FEEDBACK DO SALVAR -->
-          {#if saveMessage}
-            <div class="save-feedback">{saveMessage}</div>
-          {/if}
-          <!-- ⬆️ FEEDBACK DO SALVAR -->
-
-          
-
+        {#if saveMessage}
+          <div class="save-feedback">{saveMessage}</div>
+        {/if}
       {/if}
     </div>
   </header>
@@ -637,71 +602,65 @@ function applyCSeating() {
     <section class="seating-grid-wrapper">
 
       {#if viewMode === 'student'}
-          <div class="teacher-desk">教卓</div>
+        <div class="teacher-desk">教卓</div>
       {/if}
+
       {#if seats.length}
-      <div class="seating-grid">
+        <div class="seating-grid">
           {#each Array(maxRows) as _, r}
-              <div class="row"
-              style={`--cols: ${maxCols}`}
-              >
-                  {#each Array(maxCols) as _, c}
-                      
-                      {@const rReal = viewMode === 'teacher' ? maxRows - 1 - r : r}
-                      {@const cReal = viewMode === 'teacher' ? maxCols - 1 - c : c}
+            <div class="row" style={`--cols: ${maxCols}`}>
+              {#each Array(maxCols) as _, c}
 
-                      {#key `${rReal}-${cReal}`}
-                          <div
-                              class={`seat 
-                                  ${seats[rReal * maxCols + cReal].active ? 'active' : 'inactive'} 
-                                  ${isDragging && seats[rReal * maxCols + cReal].active ? 'drop-ready' : ''} 
-                                  ${hoverSeatKey === seatKey(rReal + 1, cReal + 1) ? 'drop-hover' : ''}
-                              `}
-                              on:click={() => handleSeatTap(rReal + 1, cReal + 1)}
-                              on:dragover={(e) => handleSeatDragOver(e, seats[rReal * maxCols + cReal])}
-                              on:dragleave={(e) => handleSeatDragLeave(e, seats[rReal * maxCols + cReal])}
-                              on:drop={(e) => handleSeatDrop(e, seats[rReal * maxCols + cReal])}
-                          >   
-                              
-                              {#if seats[rReal * maxCols + cReal].active}
-                                  {#if seats[rReal * maxCols + cReal].student_id}
-                                      <span 
-                                          class="student-name"
-                                          draggable="true"
-                                          on:dragstart={(e) => handleStudentDragStart(e, seats[rReal * maxCols + cReal].student_id)}
-                                          on:dragend={handleStudentDragEnd}
-                                      >
-                                          {studentName(seats[rReal * maxCols + cReal].student_id)}
-                                      </span>
-                                  {:else}
-                                  <span class="seat-number">{rReal + 1}-{colLetter(cReal + 1)}</span>
-                                  {/if}
-                              {:else}
-                                  <span class="inactive-mark">×</span>
-                              {/if}
-                          </div>
-                      {/key}
+                {@const rReal = viewMode === 'teacher' ? maxRows - 1 - r : r}
+                {@const cReal = viewMode === 'teacher' ? maxCols - 1 - c : c}
 
-                  {/each}
-              </div>
+                {#key `${rReal}-${cReal}`}
+                  <div
+                    class={`seat 
+                      ${seats[rReal * maxCols + cReal].active ? 'active' : 'inactive'} 
+                      ${isDragging && seats[rReal * maxCols + cReal].active ? 'drop-ready' : ''} 
+                      ${hoverSeatKey === seatKey(rReal + 1, cReal + 1) ? 'drop-hover' : ''}
+                    `}
+                                        on:click={() => handleSeatTap(rReal + 1, cReal + 1)}
+                    on:dragover={(e) => handleSeatDragOver(e, seats[rReal * maxCols + cReal])}
+                    on:dragleave={(e) => handleSeatDragLeave(e, seats[rReal * maxCols + cReal])}
+                    on:drop={(e) => handleSeatDrop(e, seats[rReal * maxCols + cReal])}
+                  >
+                    {#if seats[rReal * maxCols + cReal].active}
+                      {#if seats[rReal * maxCols + cReal].student_id}
+                        <span
+                          class="student-name"
+                          draggable="true"
+                          on:dragstart={(e) =>
+                            handleStudentDragStart(
+                              e,
+                              seats[rReal * maxCols + cReal].student_id
+                            )
+                          }
+                          on:dragend={handleStudentDragEnd}
+                        >
+                          {studentName(seats[rReal * maxCols + cReal].student_id)}
+                        </span>
+                      {:else}
+                        <span class="seat-number">
+                          {rReal + 1}-{colLetter(cReal + 1)}
+                        </span>
+                      {/if}
+                    {:else}
+                      <span class="inactive-mark">×</span>
+                    {/if}
+                  </div>
+                {/key}
+              {/each}
+            </div>
           {/each}
-      </div>
-
-
-
-      
-    {/if}
-
-      {#if viewMode === 'teacher'}
-      <div class="teacher-desk">教卓</div>
+        </div>
       {/if}
 
-     </section>
-     
-    
- 
-  
-
+      {#if viewMode === "teacher"}
+        <div class="teacher-desk">教卓</div>
+      {/if}
+    </section>
 
     <aside
       class="student-list-wrapper"
@@ -709,11 +668,14 @@ function applyCSeating() {
       on:drop={handleStudentListDrop}
     >
       <h2>生徒一覧</h2>
+
       <ul class="student-list">
-          {#each students.filter(s => !seats.some(seat => seat.student_id === s.id)) as student}
+        {#each students.filter(
+          (s) => !seats.some((seat) => seat.student_id === s.id)
+        ) as student}
           <li
             class="student-item"
-            draggable={isEditing && viewMode === 'student'}
+            draggable={isEditing && viewMode === "student"}
             on:dragstart={(e) => handleStudentDragStart(e, student.id)}
             on:dragend={handleStudentDragEnd}
           >
@@ -724,13 +686,14 @@ function applyCSeating() {
 
       {#if isEditing}
         <p class="hint">
-          生徒をドラッグして座席に配置できます。<br>
+          生徒をドラッグして座席に配置できます。<br />
           ☆座席をダブルクリックすると有効/無効を切り替えます。
         </p>
       {/if}
     </aside>
   </main>
 </div>
+
 
 <style>
 
