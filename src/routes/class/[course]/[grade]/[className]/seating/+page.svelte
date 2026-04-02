@@ -101,28 +101,6 @@ function generateGrid(total) {
   return { seats, rows, cols };
 }
 
-$: if (students?.length > 0 && (seatingType === "auto" || seatingType === "custom")) {
-  const total = Math.min(students.length, 35);
-  const required = total <= 30 ? 30 : 35;
-
-  // expandir
-  if (seats.length < required) {
-    const { seats: newSeats, rows, cols } = generateGrid(required);
-    seats = newSeats;
-    maxRows = rows;
-    maxCols = cols;
-  }
-
-  // reduzir
-  if (seats.length > required) {
-    seats = seats.slice(0, required);
-    const rows = 5;
-    const cols = Math.ceil(required / rows);
-    maxRows = rows;
-    maxCols = cols;
-  }
-}
-
 
 
 
@@ -257,9 +235,10 @@ const required = total <= 30 ? 30 : 35;
 if (seatingType === "auto") {
   const { seats: newSeats, rows, cols } = generateGrid(required);
 
-  // preservar student_id
   autoSeats = newSeats.map((seat, i) => ({
     ...seat,
+    // preserva active e student_id
+    active: autoSeats[i]?.active ?? true,
     student_id: autoSeats[i]?.student_id ?? null
   }));
 
@@ -274,6 +253,7 @@ if (seatingType === "custom") {
 
     customSeats = newSeats.map((seat, i) => ({
       ...seat,
+      active: customSeats[i]?.active ?? true,
       student_id: customSeats[i]?.student_id ?? null
     }));
 
@@ -282,6 +262,8 @@ if (seatingType === "custom") {
   }
 }
 }
+
+
 
 
 
