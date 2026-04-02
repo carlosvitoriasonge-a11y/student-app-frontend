@@ -57,18 +57,20 @@ $: if (students.length > 0) {
   let saveMessage = "";
 
   // maxRows/maxCols passam a depender do tipo de layout
-    $: maxCols =
-    seatingType === 'C'
-      ? 8
-      : baseCols; // baseCols = 6
-
-    $: maxRows =
-      seatingType === 'A' || seatingType === 'B'
-      ? 12
-      : seatingType === 'C'
-        ? 5
-        : baseRows; // baseRows = 5
-
+  $: if (seats?.length) {
+  if (seatingType === 'A' || seatingType === 'B') {
+    maxRows = 12;
+    maxCols = baseCols;
+  }
+  else if (seatingType === 'C') {
+    maxRows = 5;
+    maxCols = 8;
+  }
+  else {
+    maxCols = Math.max(...seats.map(s => s.col));
+    maxRows = Math.max(...seats.map(s => s.row));
+  }
+}
 
 
 
