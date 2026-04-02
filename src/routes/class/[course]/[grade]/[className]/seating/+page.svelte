@@ -639,7 +639,7 @@ function applyCSeating() {
       {#if viewMode === 'student'}
           <div class="teacher-desk">教卓</div>
       {/if}
-    {#if seats.length === maxRows * maxCols}
+      {#if seats.length}
       <div class="seating-grid">
           {#each Array(maxRows) as _, r}
               <div class="row"
