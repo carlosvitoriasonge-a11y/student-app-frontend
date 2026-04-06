@@ -258,20 +258,26 @@
 
 <style>
   .modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 50;
-  }
-  .modal-content {
-    background: white;
-    padding: 16px;
-    border-radius: 4px;
-    min-width: 280px;
-  }
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 20px; /* evita colar nas bordas */
+}
+
+.modal-content {
+  background: white;
+  padding: 16px;
+  border-radius: 4px;
+  min-width: 280px;
+
+  max-height: 80vh;     /* 🔥 altura máxima */
+  overflow-y: auto;     /* 🔥 scroll vertical */
+}
+
 
   .table-wrapper {
     width: 100%;

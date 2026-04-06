@@ -16,7 +16,10 @@
       );
 
       // filtra 休学
-      students = data.filter(s => s.status !== "休学");
+      students = data
+      .filter(s => s.status !== "休学")
+      .sort((a, b) => (a.attend_no ?? 0) - (b.attend_no ?? 0));
+
 
     } catch (err) {
       console.error("エラー:", err);
@@ -163,6 +166,17 @@ function generateGrid(total) {
     seatingType === "A" ? ASeats :
     seatingType === "B" ? BSeats : 
     CSeats;
+
+  // --- PATCH: Recriar BSeats quando baseCols mudar ---
+  $: if (seatingType === "B") {
+    const old = BSeats;
+    BSeats = defaultGridAB().map((seat, i) => ({
+      ...seat,
+      active: old[i]?.active ?? true,
+      student_id: old[i]?.student_id ?? null
+    }));
+  }
+
 
 
 
@@ -589,7 +603,6 @@ function applyCSeating() {
 
 
 
-
 <svelte:head>
   <title>座席表</title>
 </svelte:head>
@@ -805,7 +818,10 @@ function applyCSeating() {
     >
       <h2>生徒一覧</h2>
       <ul class="student-list">
-          {#each students.filter(s => !seats.some(seat => seat.student_id === s.id)) as student}
+        {#each students
+            .filter(s => !seats.some(seat => seat.student_id === s.id))
+            .sort((a, b) => (a.attend_no ?? 0) - (b.attend_no ?? 0))
+          as student}
           <li
             class="student-item"
             draggable={isEditing && viewMode === 'student'}
@@ -816,6 +832,7 @@ function applyCSeating() {
           </li>
         {/each}
       </ul>
+      
 
       {#if isEditing}
         <p class="hint">

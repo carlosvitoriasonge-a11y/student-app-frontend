@@ -83,6 +83,39 @@ $: {
     );
   }
 
+  function toggleAll() {
+  const list = attendance?.studentsInfo ?? [];
+
+  for (const st of list) {
+    attendanceStore.setStatus(String(st.id));
+  }
+}
+
+
+
+
+
+
+
+function cycleStatus(current) {
+  const order = [
+    "未記録",
+    "出席",
+    "欠席",
+    "遅刻",
+    "早退",
+    "遅刻と早退",
+    "出席停止",
+    "忌引き",
+    "公欠"
+  ];
+
+  const idx = order.indexOf(current);
+  if (idx === -1 || idx === order.length - 1) return "未記録";
+  return order[idx + 1];
+}
+
+
   $: photoStudent =
     attendance?.showPhoto
       ? getStudent(attendance.showPhoto)
@@ -168,6 +201,7 @@ $: {
     default: return "#222";
   }
 }
+
 
 
 </script>
@@ -294,6 +328,21 @@ $: {
 }
 
 
+.bulk-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.bulk-buttons button {
+    padding: 6px 12px;
+    font-size: 14px;
+}
+
+
+
+.bulk-buttons button { background: #04ff00;  margin-left: 1rem; }
+  .bulk-buttons button:hover { background: #005711; }
 
 
 
@@ -335,6 +384,12 @@ $: {
   
   
 </div>
+</div>
+
+<div class="bulk-buttons">
+  <button on:click={toggleAll}>全員 切替</button>
+
+
 </div>
 
 

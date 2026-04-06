@@ -195,6 +195,21 @@
     studentsStatus = { ...studentsStatus, [sid]: next };
   }
 
+  function toggleAll() {
+  const list = attendance?.studentsInfo ?? [];
+  const currentMap = studentsStatus || {};
+  const updated = { ...currentMap };
+
+  for (const st of list) {
+    const sid = String(st.id ?? st.student_id);
+    const current = updated[sid] ?? "未記録";
+    updated[sid] = cycleStatus(current);
+  }
+
+  studentsStatus = updated;
+}
+
+
   // ==========================
   // GRID / SEATING
   // ==========================
@@ -492,6 +507,8 @@
   margin-top: 8px;
 }
 
+.layout-switch button 
+  
   
 .modal-backdrop {
   position: fixed;
@@ -579,6 +596,23 @@
 }
 
 
+.bulk-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.bulk-buttons button {
+    padding: 6px 12px;
+    font-size: 14px;
+}
+
+
+
+.bulk-buttons button { background: #04ff00;  margin-left: 1rem; }
+  .bulk-buttons button:hover { background: #005711; }
+
+
 
   </style>
   
@@ -617,6 +651,8 @@
       <button on:click={() => attendanceSubStore.setLayout("B")} disabled={$attendanceSubStore.layout === "B"}>B</button>
       <button on:click={() => attendanceSubStore.setLayout("C")} disabled={$attendanceSubStore.layout === "C"}>C</button>
     </div>
+
+  
     
   
     <div class="header-info">
@@ -626,6 +662,12 @@
       {/if}
       <button class="save-btn" on:click={savePeriod}>保存</button>
     </div>
+  </div>
+
+  <div class="bulk-buttons">
+    <button on:click={toggleAll}>全員 切替</button>
+  
+  
   </div>
   
   

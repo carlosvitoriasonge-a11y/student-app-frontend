@@ -4,7 +4,10 @@
     const course = data.course;
     const grade = data.grade;
     const className = data.className;
-    const students = (data.students ?? []).filter(st => st.status !== "休学");
+    const students = (data.students ?? [])
+      .filter(st => st.status !== "休学")
+      .sort((a, b) => Number(a.attend_no) - Number(b.attend_no));
+
 
   
     let selectedDate = new Date().toLocaleDateString("sv-SE");

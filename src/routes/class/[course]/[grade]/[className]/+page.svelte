@@ -79,6 +79,10 @@
   >座席表
   </button>
 
+  <button class="seat-button2" on:click={() => goto(`/class/${course}/${grade}/gakunen`)}
+    >学年集会　座席表
+    </button>
+
   <button
   class="attendance-button"
   on:click={() => goto(`/class/${course}/${grade}/${className}/attendance`)}
@@ -90,6 +94,13 @@
   on:click={() => goto(`/class/${course}/${grade}/${className}/attendance_sub`)}
 >
   授業の出欠を記録する
+</button>
+
+<button
+class="attendance-sub-button2"
+on:click={() => goto(`/class/${course}/${grade}/attendance_gakunen`)}
+>
+学年集会の出欠を記録する
 </button>
 
 <button
@@ -476,6 +487,17 @@ on:click={() => goto(`/class/${course}/${grade}/${className}/koki`)}
   margin: 1rem 0; 
   } 
 
+
+  .seat-button2{ 
+  display: inline-block; 
+  padding: 8px 14px; 
+  border-radius: 6px; 
+  text-decoration: none; 
+  font-weight: 600; 
+  color: white; 
+  margin: 1rem 0; 
+  } 
+
 .attendance-sub-button { 
   display: inline-block; 
   padding: 8px 14px; 
@@ -483,6 +505,16 @@ on:click={() => goto(`/class/${course}/${grade}/${className}/koki`)}
   text-decoration: none; 
   font-weight: 600; 
   color: green; 
+  margin: 1rem 0; 
+  } 
+
+  .attendance-sub-button2 { 
+  display: inline-block; 
+  padding: 8px 14px; 
+  border-radius: 6px; 
+  text-decoration: none; 
+  font-weight: 600; 
+  color: rgb(255, 255, 255); 
   margin: 1rem 0; 
   } 
 
@@ -561,6 +593,9 @@ on:click={() => goto(`/class/${course}/${grade}/${className}/koki`)}
   .seat-button { background: rgb(0, 68, 255); }
   .seat-button:hover { background: #1e3591; }
 
+  .seat-button2 { background: rgb(152, 179, 255); margin-left: 1rem; }
+  .seat-button2:hover { background: #4c5b99; }
+
   .reports-button { background: #f3007e;  margin-left: 1rem; }
   .reports-button:hover { background: #8e0891; }
 
@@ -569,6 +604,10 @@ on:click={() => goto(`/class/${course}/${grade}/${className}/koki`)}
 
   .attendance-sub-button { background:rgb(242, 255, 0); margin-left: 1rem; }
   .attendance-sub-button:hover { background:rgb(149, 172, 5); }
+
+
+  .attendance-sub-button2 { background:rgb(255, 134, 14); margin-left: 1rem; }
+  .attendance-sub-button2:hover { background:rgb(75, 48, 19); }
 
   .week-attend-button { background:rgb(255, 255, 255); margin-left: 1rem; }
   .week-attend-button:hover { background:rgb(154, 154, 154); }
