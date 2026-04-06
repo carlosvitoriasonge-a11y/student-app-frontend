@@ -83,20 +83,34 @@
     // SEATING GAKUNEN
     // ==========================
     async function loadGakunenSeating() {
-      const res = await apiFetch(
-        `/api/students/seating?course=${course}&grade=${grade}&type=gakunen`
-      );
-  
-      seats = res?.seats || [];
-  
-      if (seats.length > 0) {
-        layoutRows = Math.max(...seats.map((s: any) => Number(s.row))) || 12;
-        layoutCols = Math.max(...seats.map((s: any) => Number(s.col))) || 7;
-      } else {
-        layoutRows = 12;
-        layoutCols = 7;
-      }
-    }
+  const res = await apiFetch(
+    `/api/students/seating?course=${course}&grade=${grade}&type=gakunen`
+  );
+
+  seats = res?.seats || [];
+
+  // ⭐⭐⭐ INVERTER PARA TEACHER VIEW (igual ao HR) ⭐⭐⭐
+  if (seats.length > 0) {
+    const maxRow = Math.max(...seats.map((s: any) => Number(s.row)));
+    const maxCol = Math.max(...seats.map((s: any) => Number(s.col)));
+
+    seats = seats.map((s: any) => ({
+      ...s,
+      row: maxRow - (Number(s.row) - 1),
+      col: maxCol - (Number(s.col) - 1)
+    }));
+  }
+
+  // atualizar dimensões
+  if (seats.length > 0) {
+    layoutRows = Math.max(...seats.map((s: any) => Number(s.row))) || 12;
+    layoutCols = Math.max(...seats.map((s: any) => Number(s.col))) || 7;
+  } else {
+    layoutRows = 12;
+    layoutCols = 7;
+  }
+}
+
   
     function seatAt(r: number, c: number) {
       return (
