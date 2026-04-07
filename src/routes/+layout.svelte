@@ -123,9 +123,8 @@
     { name: "休学中の生徒一覧", page: "/students/suspended" },
     { name: "生徒登録", page: "/students/new" },
     { name: "CSV 一括登録", page: "/students/import" },
-    { name: "昇級処理", page: "/promote" },
-    { name: "成績入力", page: "/grades" },
-    { name: "クラス分け処理", page: "/classes/assign" },
+    { name: "昇　級・卒　業", page: "/promote" },
+    { name: "クラス分け", page: "/classes/assign" },
     { name: "卒業生一覧", page: "/students/graduates" },
     { name: "転出者一覧", page: "/exit" }
   ];
@@ -182,7 +181,7 @@ async function changeClass(url) {
     <button class="menu-toggle" on:click={toggleSidebar}>☰</button>
 
     <div class="title" on:click={() => goto('/home')} style="cursor:pointer;">
-      英心高等学校　生徒管理アプリ
+      英心高等学校　教務管理システム
     </div>
     
     <ServerStatus />
