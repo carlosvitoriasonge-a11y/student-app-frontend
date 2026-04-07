@@ -11,6 +11,9 @@
 
   
     let selectedDate = new Date().toLocaleDateString("sv-SE");
+
+    $: weekDates = getWeekDates(selectedDate);
+
   
     const days = ["月", "火", "水", "木", "金"];
     const periodKeys = [
@@ -69,6 +72,14 @@ function compactStatus(full) {
       if (finalSymbol === "／") return "／";
       return "";
     }
+
+
+    function formatMD(iso) {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-");
+  return `${Number(m)}/${Number(d)}`;
+}
+
   
     function getWeekDates(baseDateStr) {
       const base = new Date(baseDateStr);
@@ -175,7 +186,11 @@ const attDay = attJson?.classes?.[classId] ?? {};
   
     {#each days as d}
     <div class="day-table">
-        <div class="day-header">{d}曜日</div>
+      <div class="day-header">
+        {formatMD(weekDates[d])}（{d}曜日）
+      </div>
+      
+      
   
         {#each periodKeys as p}
           <div class="cell header">
@@ -203,6 +218,14 @@ const attDay = attJson?.classes?.[classId] ?? {};
   </div>
   
   <style>
+
+.day-header {
+  font-weight: bold;
+  text-align: center;
+  background: #ddd;
+  padding: 4px;
+}
+
 :root {
   --col-width: 23px;
   --name-col-width: 150px;

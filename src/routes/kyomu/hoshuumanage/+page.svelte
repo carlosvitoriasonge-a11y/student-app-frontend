@@ -230,9 +230,11 @@
     {:else if subjects.length === 0}
         <p>科目なし</p>
     {:else}
-        <ul>
+    <ul style="display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0;">
+
             {#each subjects as subj}
-                <li>
+            <li style="margin: 0;">
+
                     <button
                         on:click={() => loadSubject(subj)}
                         style="
