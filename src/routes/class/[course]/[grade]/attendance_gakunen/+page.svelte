@@ -314,6 +314,21 @@
     function onPeriodChange() {
       loadDay();
     }
+
+    function resetStatus() {
+  const list = attendance?.studentsInfo ?? [];
+  const updated = {};
+
+  for (const st of list) {
+    const sid = String(st.id ?? st.student_id);
+    updated[sid] = "未記録";
+  }
+
+  // 🔥 força reatividade
+  studentsStatus = {};
+  studentsStatus = updated;
+}
+
   
     // ==========================
     // SALVAR POR CLASSE REAL
@@ -459,8 +474,8 @@
       align-items: stretch;
     }
     .seat {
-      max-height: 100px;
-      min-height: 110px;
+      max-height: 50px;
+      min-height: 60px;
       min-width: 100px;
       max-width: 100px;
       padding: 4px 6px;
@@ -588,6 +603,8 @@
       margin-right: 12px;
       animation: fadeIn 0.2s ease-out;
     }
+
+    .no-photo-text { width:120px; height:120px; display:flex; align-items:center; justify-content:center; background:#f3f4f6; color:#6b7280; border-radius:6px; text-align:center; padding:8px; font-size:14px; line-height:1.2; }
   
     .grid,
     .grid *,
@@ -627,12 +644,33 @@
 .bulk-buttons button {
     padding: 6px 12px;
     font-size: 14px;
+    margin-top: 12px; 
+}
+
+
+.bulk-buttons button {
+    padding: 6px 12px;
+    font-size: 14px;
+    margin-top: 12px; 
+    border-radius: 12px; /* 🔥 redondo */
 }
 
 
 
-.bulk-buttons button { background: #04ff00;  margin-left: 1rem; }
-  .bulk-buttons button:hover { background: #005711; }
+
+
+.btn-green { background: #1835f1; color: #ffffff; }
+.btn-blue { background: #5fff2a; }
+
+
+
+.subtitle {
+  margin-top: 14px; 
+  margin-left: 30px;
+  font-size: 30px
+}
+
+
   </style>
   
   <div class="header-row">
@@ -666,11 +704,15 @@
         {#if saveMessage}
           <div class="save-feedback">{saveMessage}</div>
         {/if}
-        <button class="save-btn" on:click={savePeriod}>保存</button>
+        
       </div>
       </div>
       <div class="bulk-buttons">
-        <button on:click={toggleAll}>全員 切替</button>
+        <button class="btn-green"     on:click={toggleAll}>全員 切替</button>
+        <button class="reset-btn" on:click={resetStatus}>
+            リセット
+          </button>
+        <button class="btn-blue" on:click={savePeriod}>保存</button>
       
       
       </div>

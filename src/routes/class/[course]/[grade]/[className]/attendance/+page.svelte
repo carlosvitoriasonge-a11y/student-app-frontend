@@ -9,6 +9,8 @@
 
   let attendance;
   let gridKey;
+  let saveMessage = "";
+
 
   $: attendance = $attendanceStore;
   $: console.log("SEATS:", attendance?.seats);
@@ -293,8 +295,9 @@ function cycleStatus(current) {
     align-items: center; 
     justify-content: flex-start; 
     gap: 12px; 
-    flex-wrap: nowrap; /* impede quebrar linha */ 
-    white-space: nowrap; /* impede quebra interna */ 
+    flex-wrap: wrap;
+    white-space: normal;
+
   }
 
   .header-info { 
@@ -337,12 +340,25 @@ function cycleStatus(current) {
 .bulk-buttons button {
     padding: 6px 12px;
     font-size: 14px;
+    margin-top: 12px; 
+    border-radius: 12px; /* 🔥 redondo */
 }
 
 
 
-.bulk-buttons button { background: #04ff00;  margin-left: 1rem; }
-  .bulk-buttons button:hover { background: #005711; }
+
+
+.btn-green { background: #1835f1; color: #ffffff; }
+.btn-blue { background: #5fff2a; }
+
+
+
+.subtitle {
+  margin-top: 14px; 
+  margin-left: 30px;
+  font-size: 30px
+}
+
 
 
 
@@ -372,24 +388,26 @@ function cycleStatus(current) {
   <button on:click={() => attendanceStore.setFixedLayout("B")}>Bに固定</button>
   <button on:click={() => attendanceStore.setFixedLayout("C")}>Cに固定</button>
 </div>
+</div>
 
-<div class="header-info">
+<div style="clear: both;"></div>
+
+
+<div style="clear: both;"></div>
+
+<br>
+<div class="bulk-buttons">
+  <button class="btn-green" on:click={toggleAll}>全員 切替</button>
   <button class="reset" on:click={() => attendanceStore.resetDay()}>
     リセット
   </button>
+  <button class="btn-blue" disabled={!attendance?.dirty} on:click={() => attendanceStore.save()}>保存</button>
+  {#if saveMessage}
+  <div class="save-feedback">{saveMessage}</div>
+  {/if}
+
   <span class="subtitle">{classLabel}</span>
-  <button class="save-btn" style="margin-top:0px;" disabled={!attendance?.dirty} on:click={() => attendanceStore.save()}>保存</button>
-  
-  
-  
-  
-</div>
-</div>
-
-<div class="bulk-buttons">
-  <button on:click={toggleAll}>全員 切替</button>
-
-
+ 
 </div>
 
 

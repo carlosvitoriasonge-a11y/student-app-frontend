@@ -34,6 +34,8 @@
   $: attendance = $attendanceStore;
   $: sub = $attendanceSubStore;
 
+  // 🔥 COLOCA AQUI
+
   $: gridKey = sub?.layout + "-" + JSON.stringify(sub?.seats);
   $: console.log("SEATING SUB:", sub?.seats);
 
@@ -71,6 +73,8 @@
 
   let periodsData = {};
   let studentsStatus = {};
+  let isResetting = false;
+
 
   // ==========================
   // DEFINIÇÃO DE PERÍODOS
@@ -225,6 +229,8 @@
   // CARREGAR DADOS DO DIA
   // ==========================
   async function loadDay() {
+    if (isResetting) return;
+
     const res = await apiFetch(
       `/api/attendance_sub?date=${today}&course=${encodeURIComponent(course)}&grade=${encodeURIComponent(
         grade
@@ -365,6 +371,31 @@
     });
   }
 
+
+  function resetStatus() {
+  const list = attendance?.studentsInfo ?? [];
+  const currentMap = studentsStatus || {};
+  const updated = { ...currentMap };
+
+  for (const st of list) {
+    const sid = String(st.id ?? st.student_id);
+    let current = updated[sid] ?? "未記録";
+
+    // 🔥 cicla até voltar pra "未記録" usando a MESMA LÓGICA do toggle
+    while (current !== "未記録") {
+      current = cycleStatus(current);
+    }
+
+    updated[sid] = current;
+  }
+
+  studentsStatus = updated;
+}
+
+
+
+
+
   // ==========================
   // MODAL DE MATÉRIAS
   // ==========================
@@ -396,6 +427,8 @@
     selectedName = null;
     showSubjectModal = false;
   }
+
+
 
   onMount(init);
 </script>
@@ -507,6 +540,8 @@
   margin-top: 8px;
 }
 
+.no-photo-text { width:120px; height:120px; display:flex; align-items:center; justify-content:center; background:#f3f4f6; color:#6b7280; border-radius:6px; text-align:center; padding:8px; font-size:14px; line-height:1.2; }
+
 .layout-switch button 
   
   
@@ -605,12 +640,23 @@
 .bulk-buttons button {
     padding: 6px 12px;
     font-size: 14px;
+    margin-top: 12px; 
+    border-radius: 12px; /* 🔥 redondo */
 }
 
 
 
-.bulk-buttons button { background: #04ff00;  margin-left: 1rem; }
-  .bulk-buttons button:hover { background: #005711; }
+  .btn-green { background: #1835f1; color: #ffffff; }
+.btn-blue { background: #5fff2a; }
+
+
+
+.subtitle {
+  margin-top: 14px; 
+  margin-left: 30px;
+  font-size: 30px
+}
+
 
 
 
@@ -652,23 +698,27 @@
       <button on:click={() => attendanceSubStore.setLayout("C")} disabled={$attendanceSubStore.layout === "C"}>C</button>
     </div>
 
-  
+  </div>
+  <div style="clear: both;"></div>
+
+  <br>
+  <div class="bulk-buttons">
+    <button class="btn-green" on:click={toggleAll}>全員 切替</button>
+    <button class="reset-btn" on:click={resetStatus}>
+      リセット
+    </button>
+    
+    <button class="btn-blue" on:click={savePeriod}>保存</button>
+    {#if saveMessage}
+    <div class="save-feedback">{saveMessage}</div>
+    {/if}
     
   
-    <div class="header-info">
-      <span class="subtitle">{classLabel}</span>
-      {#if saveMessage}
-        <div class="save-feedback">{saveMessage}</div>
-      {/if}
-      <button class="save-btn" on:click={savePeriod}>保存</button>
+    <span class="subtitle">{classLabel}</span>
+   
     </div>
-  </div>
 
-  <div class="bulk-buttons">
-    <button on:click={toggleAll}>全員 切替</button>
-  
-  
-  </div>
+
   
   
   <div class="page">
