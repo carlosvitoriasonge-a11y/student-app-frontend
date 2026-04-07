@@ -209,9 +209,10 @@ function handleStudentListDrop(e) {
 
   
 function applyAuto() {
-  if (!allStudents.length) return;
+  if (!students.length) return;
 
-  const sorted = [...allStudents].sort((a, b) =>
+  // alunos ainda não sentados
+  const sorted = [...students].sort((a, b) =>
     (a.attend_no ?? 0) - (b.attend_no ?? 0)
   );
 
@@ -222,7 +223,12 @@ function applyAuto() {
     for (let r = 1; r <= maxRows; r++) {
       const seat = copy.find(s => s.row === r && s.col === c);
       if (!seat || !seat.active) continue;
+
+      // ⭐ NÃO sobrescreve seats já ocupados (MANUAL)
+      if (seat.student_id) continue;
+
       if (i >= sorted.length) break;
+
       seat.student_id = sorted[i].id;
       i++;
     }
@@ -231,6 +237,7 @@ function applyAuto() {
   gakunenSeats = [...copy];
   recomputeUnseated();
 }
+
 
 
 

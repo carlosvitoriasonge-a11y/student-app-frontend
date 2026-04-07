@@ -8,6 +8,8 @@
   const className = params.className;
 
   let students = [];
+  let unseated = [];
+
 
   onMount(async () => {
     try {
@@ -104,6 +106,16 @@ function generateGrid(total) {
   return { seats, rows, cols };
 }
 
+
+function recomputeUnseated() {
+  const seatedIds = new Set(
+    customSeats
+      .filter(s => s.student_id)
+      .map(s => String(s.student_id))
+  );
+
+  unseated = students.filter(s => !seatedIds.has(String(s.id)));
+}
 
 
 
@@ -532,36 +544,42 @@ function applyCSeating() {
 
 
 
-  function applyRandomSeating() {
-    if(!isEditing) return;
-    if(seatingType !== 'custom') return;
-    if(!students.length) return;
+function applyRandomSeating() {
+  if (!isEditing) return;
+  if (seatingType !== 'custom') return;
 
-    const seatsCopy = customSeats.map(s => ({...s}));
+  // Atualiza lista antes do random
+  recomputeUnseated();
 
-    const shuffled = [...students]
-      .sort(() => Math.random() - 0.5);
+  if (!unseated.length) return;
 
-    let i = 0;
+  const seatsCopy = customSeats.map(s => ({ ...s }));
 
-    for (let c = 1; c <= maxCols; c++) {
-      for (let r = 1; r <= maxRows; r++) {
+  const shuffled = [...unseated].sort(() => Math.random() - 0.5);
 
-        const seat = seatsCopy.find(s => s.row === r && s.col === c);
-        if (!seat || !seat.active) continue;
+  let i = 0;
 
-        if (i >= shuffled.length) break;
+  for (let c = 1; c <= maxCols; c++) {
+    for (let r = 1; r <= maxRows; r++) {
 
-        seat.student_id = shuffled[i].id;
-        i++;
+      const seat = seatsCopy.find(s => s.row === r && s.col === c);
+      if (!seat || !seat.active) continue;
 
-      }
+      // NÃO sobrescreve seats manuais
+      if (seat.student_id) continue;
+
+      if (i >= shuffled.length) break;
+
+      seat.student_id = shuffled[i].id;
+      i++;
     }
-
-    customSeats = [...seatsCopy];
-
-
   }
+
+  customSeats = [...seatsCopy];
+
+  // Atualiza lista depois do random
+  recomputeUnseated();
+}
 
 
 
