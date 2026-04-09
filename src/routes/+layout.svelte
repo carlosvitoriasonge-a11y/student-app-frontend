@@ -164,10 +164,28 @@ function toWareki(date) {
   return `${y}年（${era}${eraYear}年）${m}月${d}日（${weekday}）`;
 }
 
+// pega horário do servidor
+async function fetchServerTime() {
+  try {
+    const res = await apiFetch("/api/server_time");
+    const data = res?.json ? await res.json() : res;
+    now = new Date(data.server_time);   // horário oficial da escola
+  } catch (e) {
+    now = new Date();                   // fallback local
+  }
+}
+
 onMount(() => {
+  // pega imediatamente
+  fetchServerTime();
+
+  // sincroniza com servidor a cada 10s
+  setInterval(fetchServerTime, 10000);
+
+  // avança 1 segundo localmente (sem usar relógio do dispositivo)
   setInterval(() => {
-    now = new Date();
-  }, 1000); // atualiza a cada minuto
+    now = new Date(now.getTime() + 1000);
+  }, 1000);
 });
 
 async function changeClass(url) {
