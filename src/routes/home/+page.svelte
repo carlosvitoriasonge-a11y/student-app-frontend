@@ -35,22 +35,6 @@
 <p>☆使用後は必ずログアウトをしてください。☆</p>
 
 
-{#if hasMissing}
-  <h2 style="margin-top:30px; color:red; font-weight:bold;">
-    📸 写真未登録の生徒
-  </h2>
-
-  {#each Object.keys(missing).sort() as className}
-    <h3 style="margin-top:15px;">{className}</h3>
-    <ul>
-      {#each missing[className] as st}
-        <li>{st.name}（{st.id}）</li>
-      {/each}
-    </ul>
-  {/each}
-{/if}
-
-
 {#if month === 9}
   <p style="color:red; font-weight:bold; margin-top:20px;">
     ☆教務の先生へ：　今年は9月卒業の生徒がいれば、9月中に卒業処理をしてください。☆
@@ -63,4 +47,32 @@
     注意：　昇級処理をしてしまうと、全ての記録が登録されます。後から変更はできませんので、内容を十分に確認してから処理をしてください。☆
   </p>
 {/if}
+
+
+
+
+{#if hasMissing}
+  <h2 style="margin-top:30px; color:red; font-weight:bold;">
+    📸 写真未登録の生徒
+  </h2>
+
+  {#each Object.keys(missing).sort() as course}
+    <h2 style="margin-top:25px;">
+      {course === "全" ? "全日" : course === "水" ? "水曜" : course === "集" ? "集中" : course}
+    </h2>
+
+    {#each Object.keys(missing[course]).sort() as className}
+      <h3 style="margin-top:10px;">{className}</h3>
+      <ul>
+        {#each missing[course][className] as st}
+          <li>{st.name}（{st.id}）</li>
+        {/each}
+      </ul>
+    {/each}
+  {/each}
+{/if}
+
+
+
+
 
