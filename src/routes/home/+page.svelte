@@ -1,26 +1,55 @@
 <script>
-    let today = new Date(); // usa o fuso do navegador automaticamente
-    let month = today.getMonth() + 1; // 0 = janeiro, 8 = setembro
+  import { onMount } from 'svelte';
+  import { apiFetch } from "$lib/api";
 
-    import { onMount } from 'svelte';
+  let today = new Date();
+  let month = today.getMonth() + 1;
 
+  let events = [];
+  let googleToken = localStorage.getItem("google_access_token");
 
-    let events = [];
-    let googleToken = localStorage.getItem("google_access_token");
+  const GOOGLE_CLIENT_ID = "404733269225-o1lmoqrgk3nnlkh6oedarn8eh9opvuiv.apps.googleusercontent.com";
 
-    // ⭐ FUNÇÃO DE LOGIN DO GOOGLE
-    const GOOGLE_CLIENT_ID = "404733269225-o1lmoqrgk3nnlkh6oedarn8eh9opvuiv.apps.googleusercontent.com"; // <-- coloque o seu aqui
+  let missing = {};
+  let hasMissing = false;
 
-    
+  onMount(async () => {
+    try {
+      const res = await apiFetch("/api/students/no_photo");
+      const data = res?.json ? await res.json() : res;
 
+      console.log("DEBUG no_photo:", data);
 
+      missing = data || {};
+      hasMissing = Object.keys(missing).length > 0;
+    } catch (e) {
+      console.error("Erro ao carregar alunos sem foto:", e);
+    }
+  });
 </script>
-  
+
 
 <h1>教務管理システム</h1>
 
 <p>英心高校教務管理システムへようこそ。左側のメニューから操作を選択してください。</p>
 <p>☆使用後は必ずログアウトをしてください。☆</p>
+
+
+{#if hasMissing}
+  <h2 style="margin-top:30px; color:red; font-weight:bold;">
+    📸 写真未登録の生徒
+  </h2>
+
+  {#each Object.keys(missing).sort() as className}
+    <h3 style="margin-top:15px;">{className}</h3>
+    <ul>
+      {#each missing[className] as st}
+        <li>{st.name}（{st.id}）</li>
+      {/each}
+    </ul>
+  {/each}
+{/if}
+
 
 {#if month === 9}
   <p style="color:red; font-weight:bold; margin-top:20px;">
@@ -34,3 +63,4 @@
     注意：　昇級処理をしてしまうと、全ての記録が登録されます。後から変更はできませんので、内容を十分に確認してから処理をしてください。☆
   </p>
 {/if}
+
