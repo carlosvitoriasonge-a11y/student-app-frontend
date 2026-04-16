@@ -2,23 +2,15 @@
   export const ssr = false;
   import { onMount } from "svelte";
   import { attendanceStore, parseClassId, formatClassLabel } from "$lib/stores/attendanceStore.js";
-  export let params;
   import { apiFetch } from "$lib/api.js";
-
-
+  export let params;
 
   let attendance;
   let gridKey;
   let saveMessage = "";
 
-
   $: attendance = $attendanceStore;
-  $: console.log("SEATS:", attendance?.seats);
-  $: console.log("CURRENT LAYOUT:", attendance?.layout);
-  $: console.log("CURRENT SEATS:", attendance?.seats);
   $: gridKey = attendance?.layout + "-" + JSON.stringify(attendance?.seats);
-  $: console.log("REACTIVE TICK");
-
 
   const course = params.course;
   const grade = params.grade;
@@ -28,46 +20,71 @@
   const { class_name } = parseClassId(localClassId);
   const classLabel = formatClassLabel({ course, grade, class_name });
 
-
   const defaultRows = 5;
-  const defaultCols = 6; 
+  const defaultCols = 6;
 
- 
-  let today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD sem UTC
-
-
+  let today = new Date().toLocaleDateString("sv-SE");
 
   let layoutRows = defaultRows;
   let layoutCols = defaultCols;
 
   // ===============================
-// CALCULA TAMANHO REAL DO GRID
-// ===============================
-$: {
-  if (attendance?.seats && attendance.seats.length > 0) {
-    layoutRows = Math.max(...attendance.seats.map(s => Number(s.row))) || defaultRows;
-    layoutCols = Math.max(...attendance.seats.map(s => Number(s.col))) || defaultCols;
-  } else {
-    layoutRows = defaultRows;
-    layoutCols = defaultCols;
+  // CALCULA TAMANHO REAL DO GRID
+  // ===============================
+  $: {
+    if (attendance?.seats?.length > 0) {
+      layoutRows = Math.max(...attendance.seats.map(s => Number(s.row))) || defaultRows;
+      layoutCols = Math.max(...attendance.seats.map(s => Number(s.col))) || defaultCols;
+    } else {
+      layoutRows = defaultRows;
+      layoutCols = defaultCols;
+    }
   }
-}
 
-
+  // ===============================
+  // LONG PRESS + FOTO
+  // ===============================
   let timer = null;
   let longPressTriggered = false;
 
-  function startLongPress(studentId) {
+  // posição do bubble
+  let bubbleX = 0;
+  let bubbleY = 0;
+
+  const OFFSET_X = 80;   // ~2cm ao lado
+  const OFFSET_Y = -20;  // sobe um pouco
+
+  function startLongPress(studentId, event) {
     if (!studentId) return;
+
     longPressTriggered = false;
+
     timer = setTimeout(() => {
       longPressTriggered = true;
+
+      // posição do seat clicado
+      const rect = event.target.getBoundingClientRect();
+
+      let x = rect.right + OFFSET_X;
+      let y = rect.top + OFFSET_Y;
+
+      // evita sair da tela
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      x = Math.min(x, vw - 220); // bubble ~200px
+      y = Math.min(y, vh - 220);
+
+      bubbleX = x;
+      bubbleY = y;
+
       attendanceStore.showPhoto(String(studentId));
     }, 500);
   }
 
   function endLongPress() {
     clearTimeout(timer);
+
     if (longPressTriggered) {
       setTimeout(() => {
         longPressTriggered = false;
@@ -86,54 +103,38 @@ $: {
   }
 
   function toggleAll() {
-  const list = attendance?.studentsInfo ?? [];
-
-  for (const st of list) {
-    attendanceStore.setStatus(String(st.id));
+    const list = attendance?.studentsInfo ?? [];
+    for (const st of list) attendanceStore.setStatus(String(st.id));
   }
-}
 
-
-
-
-
-
-
-function cycleStatus(current) {
-  const order = [
-    "未記録",
-    "出席",
-    "欠席",
-    "遅刻",
-    "早退",
-    "遅刻と早退",
-    "出席停止",
-    "忌引き",
-    "公欠"
-  ];
-
-  const idx = order.indexOf(current);
-  if (idx === -1 || idx === order.length - 1) return "未記録";
-  return order[idx + 1];
-}
-
+  function cycleStatus(current) {
+    const order = [
+      "未記録",
+      "出席",
+      "欠席",
+      "遅刻",
+      "早退",
+      "遅刻と早退",
+      "出席停止",
+      "忌引き",
+      "公欠"
+    ];
+    const idx = order.indexOf(current);
+    if (idx === -1 || idx === order.length - 1) return "未記録";
+    return order[idx + 1];
+  }
 
   $: photoStudent =
     attendance?.showPhoto
       ? getStudent(attendance.showPhoto)
       : null;
 
-
-
   async function init() {
-    // 1. Carregar alunos e attendance
     await attendanceStore.loadStudents(localClassId);
     await attendanceStore.loadAttendance(today, localClassId);
 
-    // 2. Extrair course/grade/class_name
     const { course, grade, class_name } = parseClassId(localClassId);
 
-    // 3. Buscar preferência salva no backend
     let preferred = "auto";
     try {
       const prefRes = await apiFetch(
@@ -141,30 +142,19 @@ function cycleStatus(current) {
       );
       const pref = prefRes?.json ? await prefRes.json() : prefRes;
 
-      const p =pref?.preferred_layout
-      if (["auto", "custom", "A", "B", "C"].includes(p)) {
-        preferred = p;
-      } else {
-        preferred = "auto";
-      }
-
+      const p = pref?.preferred_layout;
+      preferred = ["auto", "custom", "A", "B", "C"].includes(p) ? p : "auto";
     } catch (err) {
-      console.error("Erro ao carregar preferência:", err);
       preferred = "auto";
     }
 
-    // 4. Carregar seating com o layout correto
     await attendanceStore.loadSeating(localClassId, preferred);
   }
 
   onMount(init);
 
-
-
-
   async function switchLayout(layout) {
     await attendanceStore.loadSeating(localClassId, layout);
-
   }
 
   function statusColor(status) {
@@ -182,30 +172,18 @@ function cycleStatus(current) {
     }
   }
 
-  function resetStatus(studentId) { updateStatus(studentId, "未記録"); }
-
-  /* =========================
-     TEACHER VIEW SEMPRE
-     ========================= */
+  function statusTextColor(status) {
+    switch (status) {
+      case "忌引き": return "white";
+      default: return "#222";
+    }
+  }
 
   function seatAt(r, c) {
-    const found = attendance.seats.find(
+    return attendance.seats.find(
       s => Number(s.row) - 1 === r && Number(s.col) - 1 === c
-    );
-  
-
-    return found ?? null;
+    ) ?? null;
   }
-
-  function statusTextColor(status) {
-  switch (status) {
-    case "忌引き": return "white";
-    default: return "#222";
-  }
-}
-
-
-
 </script>
 
 <style>
@@ -436,7 +414,7 @@ function cycleStatus(current) {
             "
             on:contextmenu|preventDefault
             on:click={() => { if (!longPressTriggered) attendanceStore.setStatus(String(seat.student_id)); }}
-            on:pointerdown={() => startLongPress(seat.student_id)}
+            on:pointerdown={(e) => startLongPress(seat.student_id, e)}
             on:pointerup={endLongPress}
             on:pointerleave={endLongPress}
           >
@@ -498,7 +476,7 @@ function cycleStatus(current) {
             "
             on:contextmenu|preventDefault
             on:click={() => { if (!longPressTriggered) attendanceStore.setStatus(sid); }}
-            on:pointerdown={() => startLongPress(sid)}
+            on:pointerdown={(e) => startLongPress(sid, e)}
             on:pointerup={endLongPress}
             on:pointerleave={endLongPress}
           >
@@ -528,17 +506,17 @@ function cycleStatus(current) {
 {#if photoStudent}
   <div class="photo-bubble"
        style="
-         position: absolute;
-         top: 20%;
-         left: 50%;
+         position: fixed;
+         top: {bubbleY}px;
+         left: {bubbleX}px;
          background: white;
          padding: 12px;
          border-radius: 8px;
          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-         z-index: 999;
-         text-align: center;
+         z-index: 9999;
          pointer-events:none;
        ">
+
     {#if (photoStudent.photo ?? photoStudent.avatar ?? photoStudent.image)}
       <img
         src={

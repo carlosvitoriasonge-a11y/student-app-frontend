@@ -120,43 +120,71 @@
   }
 
   // ==========================
-  // LONG PRESS / FOTO
-  // ==========================
-  let timer = null;
-  let longPressTriggered = false;
+// LONG PRESS / FOTO (com bubble posicionado)
+// ==========================
+let timer = null;
+let longPressTriggered = false;
 
-  function startLongPress(studentId) {
-    if (!studentId) return;
-    longPressTriggered = false;
-    timer = setTimeout(() => {
-      longPressTriggered = true;
-      attendanceStore.showPhoto(String(studentId));
-    }, 500);
-  }
+// posição do bubble
+let bubbleX = 0;
+let bubbleY = 0;
 
-  function endLongPress() {
-    clearTimeout(timer);
-    if (longPressTriggered) {
-      setTimeout(() => {
-        longPressTriggered = false;
-        attendanceStore.hidePhoto();
-      }, 100);
-    } else {
+const OFFSET_X = 80;   // ~2cm ao lado
+const OFFSET_Y = -20;  // sobe um pouco
+
+function startLongPress(studentId, event) {
+  if (!studentId) return;
+
+  longPressTriggered = false;
+
+  timer = setTimeout(() => {
+    longPressTriggered = true;
+
+    // posição do elemento pressionado
+    const rect = event.target.getBoundingClientRect();
+
+    let x = rect.right + OFFSET_X;
+    let y = rect.top + OFFSET_Y;
+
+    // impede que o bubble saia da tela
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    x = Math.min(x, vw - 220); // bubble ~200px
+    y = Math.min(y, vh - 220);
+
+    bubbleX = x;
+    bubbleY = y;
+
+    attendanceStore.showPhoto(String(studentId));
+  }, 500);
+}
+
+function endLongPress() {
+  clearTimeout(timer);
+
+  if (longPressTriggered) {
+    setTimeout(() => {
+      longPressTriggered = false;
       attendanceStore.hidePhoto();
-    }
+    }, 100);
+  } else {
+    attendanceStore.hidePhoto();
   }
+}
 
-  function getStudent(id) {
-    const sid = String(id ?? "");
-    return (attendance?.studentsInfo || []).find(
-      s => sid === String(s.id ?? s.student_id)
-    );
-  }
+function getStudent(id) {
+  const sid = String(id ?? "");
+  return (attendance?.studentsInfo || []).find(
+    s => sid === String(s.id ?? s.student_id)
+  );
+}
 
-  $: photoStudent =
-    attendance?.showPhoto
-      ? getStudent(attendance.showPhoto)
-      : null;
+$: photoStudent =
+  attendance?.showPhoto
+    ? getStudent(attendance.showPhoto)
+    : null;
+
 
   // ==========================
   // STATUS / CORES
@@ -744,7 +772,7 @@
                   "
                   on:contextmenu|preventDefault
                   on:click={() => { if (!longPressTriggered) setStatus(seat.student_id); }}
-                  on:pointerdown={() => startLongPress(seat.student_id)}
+                  on:pointerdown={(e) => startLongPress(seat.student_id, e)}
                   on:pointerup={endLongPress}
                   on:pointerleave={endLongPress}
                 >
@@ -798,7 +826,7 @@
               "
   on:contextmenu|preventDefault
   on:click={() => { if (!longPressTriggered) setStatus(sid); }}
-  on:pointerdown={() => startLongPress(sid)}
+  on:pointerdown={(e) => startLongPress(sid, e)}
   on:pointerup={endLongPress}
   on:pointerleave={endLongPress}
 >
@@ -830,9 +858,9 @@
     <div
       class="photo-bubble"
       style="
-        position: absolute;
-        top: 20%;
-        left: 50%;
+        position: fixed;
+        top: {bubbleY}px;
+        left: {bubbleX}px;
         background: white;
         padding: 12px;
         border-radius: 8px;

@@ -174,27 +174,64 @@
     }
   
     // ==========================
-    // FOTO / LONG PRESS
-    // ==========================
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    let longPressTriggered = false;
-  
-    function startLongPress(studentId: string | number | null) {
-      if (!studentId) return;
+// FOTO / LONG PRESS (com bubble posicionado)
+// ==========================
+let timer: ReturnType<typeof setTimeout> | null = null;
+let longPressTriggered = false;
+
+// posição do bubble
+let bubbleX = 0;
+let bubbleY = 0;
+
+const OFFSET_X = 80;   // ~2cm ao lado
+const OFFSET_Y = -20;  // sobe um pouco
+
+function startLongPress(studentId: string | number | null, event: PointerEvent) {
+  if (!studentId) return;
+
+  longPressTriggered = false;
+
+  timer = setTimeout(() => {
+    longPressTriggered = true;
+
+    // posição do elemento pressionado
+    const rect = (event.target as HTMLElement).getBoundingClientRect();
+
+    let x = rect.right + OFFSET_X;
+    let y = rect.top + OFFSET_Y;
+
+    // impede que o bubble saia da tela
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    x = Math.min(x, vw - 220); // bubble ~200px
+    y = Math.min(y, vh - 220);
+
+    bubbleX = x;
+    bubbleY = y;
+
+    attendanceStore.showPhoto(String(studentId));
+  }, 500);
+}
+
+function endLongPress() {
+  if (timer) clearTimeout(timer);
+
+  if (longPressTriggered) {
+    setTimeout(() => {
       longPressTriggered = false;
-      timer = setTimeout(() => {
-        longPressTriggered = true;
-        attendanceStore.showPhoto(String(studentId));
-      }, 500);
-    }
-  
-    function endLongPress() {
-      if (timer) clearTimeout(timer);
       attendanceStore.hidePhoto();
-    }
-  
-    $: photoStudent =
-      attendance?.showPhoto ? getStudent(attendance.showPhoto) : null;
+    }, 100);
+  } else {
+    attendanceStore.hidePhoto();
+  }
+}
+
+$: photoStudent =
+  attendance?.showPhoto
+    ? getStudent(attendance.showPhoto)
+    : null;
+
   
     // ==========================
     // MATÉRIAS
@@ -739,7 +776,7 @@
                           on:click={() => {
                             if (!longPressTriggered) setStatus(String(seat.student_id));
                           }}
-                          on:pointerdown={() => startLongPress(String(seat.student_id))}
+                          on:pointerdown={(e) => startLongPress(seat.student_id, e)}
                           on:pointerup={endLongPress}
                           on:pointerleave={endLongPress}
                         >
@@ -798,7 +835,7 @@
                   on:click={() => {
                     if (!longPressTriggered) setStatus(sid);
                   }}
-                  on:pointerdown={() => startLongPress(sid)}
+                  on:pointerdown={(e) => startLongPress(sid, e)}
                   on:pointerup={endLongPress}
                   on:pointerleave={endLongPress}
                 >
@@ -834,9 +871,9 @@
         <div
           class="photo-bubble"
           style="
-            position: absolute;
-            top: 20%;
-            left: 50%;
+            position: fixed;
+            top: {bubbleY}px;
+            left: {bubbleX}px;
             background: white;
             padding: 12px;
             border-radius: 8px;
