@@ -35,7 +35,8 @@
     if (!name) return "";
     return name
       .replace("英語コミュニケーションⅠ", "英コⅠ")
-      .replace("英語コミュニケーションⅡ", "英コⅡ");
+      .replace("英語コミュニケーションⅡ", "英コⅡ")
+      .replace("科学と人間生活", "科学と人間");;
   }
 
   function compactStatus(full) {
