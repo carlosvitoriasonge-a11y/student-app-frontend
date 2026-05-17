@@ -271,28 +271,58 @@ $: photoStudent =
     periodsData = dayData;
 
     if (selectedPeriod && periodsData[selectedPeriod]) {
-      subject = periodsData[selectedPeriod].subject || "";
-      examFrequency = periodsData[selectedPeriod].exam_frequency ?? null;
-      studentsStatus = { ...(periodsData[selectedPeriod].students || {}) };
-    } else {
-      const todayStr = new Date().toLocaleDateString("sv-SE");
-      if (today === todayStr) {
-        const autoPeriod = detectCurrentPeriod();
-        if (autoPeriod) {
-          selectedPeriod = autoPeriod;
-        }
-      }
+  const p = periodsData[selectedPeriod];
 
-      if (selectedPeriod && periodsData[selectedPeriod]) {
-        subject = periodsData[selectedPeriod].subject || "";
-        examFrequency = periodsData[selectedPeriod].exam_frequency ?? null;
-        studentsStatus = { ...(periodsData[selectedPeriod].students || {}) };
-      } else {
-        subject = "";
-        examFrequency = null;
-        studentsStatus = {};
-      }
+  subject = p.subject || "";
+  examFrequency = p.exam_frequency ?? null;
+  studentsStatus = { ...(p.students || {}) };
+
+  // ⭐ RECONSTRÓI O OBJETO selectedSubject QUANDO A AULA JÁ EXISTE
+  if (p.subject_id) {
+    selectedSubject = {
+      id: p.subject_id,
+      subject_group: p.subject,
+      exam_frequency: p.exam_frequency
+    };
+  } else {
+    selectedSubject = null;
+  }
+
+} else {
+  const todayStr = new Date().toLocaleDateString("sv-SE");
+  if (today === todayStr) {
+    const autoPeriod = detectCurrentPeriod();
+    if (autoPeriod) {
+      selectedPeriod = autoPeriod;
     }
+  }
+
+  if (selectedPeriod && periodsData[selectedPeriod]) {
+    const p = periodsData[selectedPeriod];
+
+    subject = p.subject || "";
+    examFrequency = p.exam_frequency ?? null;
+    studentsStatus = { ...(p.students || {}) };
+
+    // ⭐ MESMA COISA AQUI: GARANTE selectedSubject
+    if (p.subject_id) {
+      selectedSubject = {
+        id: p.subject_id,
+        subject_group: p.subject,
+        exam_frequency: p.exam_frequency
+      };
+    } else {
+      selectedSubject = null;
+    }
+
+  } else {
+    subject = "";
+    examFrequency = null;
+    studentsStatus = {};
+    selectedSubject = null;   // limpa tudo quando não há aula
+  }
+}
+
   }
 
   function onDateChange() {
@@ -300,16 +330,32 @@ $: photoStudent =
   }
 
   function onPeriodChange() {
-    if (selectedPeriod && periodsData[selectedPeriod]) {
-      subject = periodsData[selectedPeriod].subject || "";
-      examFrequency = periodsData[selectedPeriod].exam_frequency ?? null;
-      studentsStatus = { ...(periodsData[selectedPeriod].students || {}) };
+  if (selectedPeriod && periodsData[selectedPeriod]) {
+    const p = periodsData[selectedPeriod];
+
+    subject = p.subject || "";
+    examFrequency = p.exam_frequency ?? null;
+    studentsStatus = { ...(p.students || {}) };
+
+    // ⭐ MESMA LÓGICA: RECONSTRÓI selectedSubject
+    if (p.subject_id) {
+      selectedSubject = {
+        id: p.subject_id,
+        subject_group: p.subject,
+        exam_frequency: p.exam_frequency
+      };
     } else {
-      subject = "";
-      examFrequency = null;
-      studentsStatus = {};
+      selectedSubject = null;
     }
+
+  } else {
+    subject = "";
+    examFrequency = null;
+    studentsStatus = {};
+    selectedSubject = null;
   }
+}
+
 
   // ==========================
   // SALVAR PERÍODO
