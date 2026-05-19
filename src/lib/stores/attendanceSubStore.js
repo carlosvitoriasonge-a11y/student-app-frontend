@@ -14,7 +14,8 @@ function createAttendanceSubStore() {
       custom: [],
       A: [],
       B: [],
-      C: []
+      C: [],
+      情報室: [] 
     },
     seats: [],
 
@@ -65,7 +66,8 @@ function createAttendanceSubStore() {
         custom: seating.custom || [],
         A: seating.A || [],
         B: seating.B || [],
-        C: seating.C || []
+        C: seating.C || [],
+        情報室: seating["情報室"] || []   // ⭐ ADICIONE AQUI
       },
       layout: preferred,
       seats: normalizedSeats

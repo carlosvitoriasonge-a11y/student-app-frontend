@@ -770,6 +770,8 @@ $: photoStudent =
       <button on:click={() => attendanceSubStore.setLayout("A")} disabled={$attendanceSubStore.layout === "A"}>A</button>
       <button on:click={() => attendanceSubStore.setLayout("B")} disabled={$attendanceSubStore.layout === "B"}>B</button>
       <button on:click={() => attendanceSubStore.setLayout("C")} disabled={$attendanceSubStore.layout === "C"}>C</button>
+      <button on:click={() => attendanceSubStore.setLayout("情報室")} disabled={$attendanceSubStore.layout === "情報室"}>情報室</button>
+
     </div>
 
   </div>
