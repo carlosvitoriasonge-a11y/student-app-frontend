@@ -54,10 +54,14 @@ $: if (students.length > 0) {
 
 
   let isEditing = false;
-  let seatingType: 'auto' | 'custom' | 'A' | 'B' | 'C' = 'auto';
+  let seatingType: 'auto' | 'custom' | 'A' | 'B' | 'C' | '情報室' = 'auto';
   let viewMode: 'teacher' | 'student' = 'teacher';
   let saving = false
   let saveMessage = "";
+  let autoDirection: 'LTR' | 'RTL' = 'LTR';
+  let jouhouDirection: 'LTR' | 'RTL' = 'LTR';
+
+
 
   // maxRows/maxCols passam a depender do tipo de layout
   $: if (seats?.length) {
@@ -69,6 +73,14 @@ $: if (students.length > 0) {
     maxRows = 5;
     maxCols = 8;
   }
+
+  else if (seatingType === '情報室') {
+  maxRows = 7;   // fileiras
+  maxCols = 5;   // colunas
+}
+
+
+
   else {
     maxCols = Math.max(...seats.map(s => s.col));
     maxRows = Math.max(...seats.map(s => s.row));
@@ -164,20 +176,41 @@ function recomputeUnseated() {
   return arr;
   }
 
+  function defaultGridJouhou(): Seat[] {
+  const arr: Seat[] = [];
+  for (let r = 1; r <= 7; r++) {      // 7 fileiras
+    for (let c = 1; c <= 5; c++) {    // 5 colunas
+      arr.push({
+        row: r,
+        col: c,
+        active: true,
+        student_id: null
+      });
+    }
+  }
+  return arr;
+}
+
+
+
 
   let autoSeats: Seat[] = defaultGrid();
   let customSeats: Seat[] = defaultGrid();
   let ASeats: Seat[] = defaultGridAB();
   let BSeats: Seat[] = defaultGridAB();
   let CSeats: Seat[] = defaultGridC();
+  let JSeats: Seat[] = defaultGridJouhou();
+
 
 
   $: seats =
-    seatingType === "auto" ? autoSeats :
-    seatingType === "custom" ? customSeats :
-    seatingType === "A" ? ASeats :
-    seatingType === "B" ? BSeats : 
-    CSeats;
+  seatingType === "auto" ? autoSeats :
+  seatingType === "custom" ? customSeats :
+  seatingType === "A" ? ASeats :
+  seatingType === "B" ? BSeats :
+  seatingType === "C" ? CSeats :
+  JSeats;
+
 
   // --- PATCH: Recriar BSeats quando baseCols mudar ---
   $: if (seatingType === "B") {
@@ -215,6 +248,7 @@ function recomputeUnseated() {
   else if (seatingType === "A") ASeats = [...ASeats];
   else if (seatingType === "B") BSeats = [...BSeats];
   else if (seatingType === "C") CSeats = [...CSeats];
+  else if (seatingType === "情報室") JSeats = [...JSeats];
 }
 
 
@@ -243,6 +277,21 @@ function recomputeUnseated() {
       ASeats = data.A?.length ? data.A : defaultGridAB(); 
       BSeats = data.B?.length ? data.B : defaultGridAB();
       CSeats = data.C?.length ? data.C : defaultGridC();
+      JSeats = data.情報室?.length ? data.情報室 : defaultGridJouhou();
+
+      // --- PATCH: normalizar JSeats para row-major 7x5 ---
+JSeats = [...JSeats]
+  .map(s => ({
+    ...s,
+    row: Number(s.row),
+    col: Number(s.col),
+    active: s.active ?? true,
+    student_id: s.student_id ?? null
+  }))
+  .filter(s => s.row >= 1 && s.row <= 7 && s.col >= 1 && s.col <= 5)
+  .sort((a, b) => a.row - b.row || a.col - b.col);
+
+
 
       
 
@@ -354,6 +403,7 @@ if (seatingType === "custom") {
     else if (seatingType === "A") ASeats = [...ASeats];
     else if (seatingType === "B") BSeats = [...BSeats];
     else if (seatingType === "C") CSeats = [...CSeats];
+    else if (seatingType === "情報室") JSeats = [...JSeats];
 
 
 
@@ -380,6 +430,7 @@ else if (seatingType === "custom") customSeats = [...customSeats];
 else if (seatingType === "A") ASeats = [...ASeats];
 else if (seatingType === "B") BSeats = [...BSeats];
 else if (seatingType === "C") CSeats = [...CSeats];
+else if (seatingType === "情報室") JSeats = [...JSeats];
 
 
 
@@ -421,39 +472,44 @@ else if (seatingType === "custom") customSeats = [...customSeats];
 else if (seatingType === "A") ASeats = [...ASeats];
 else if (seatingType === "B") BSeats = [...BSeats];
 else if (seatingType === "C") CSeats = [...CSeats];
+else if (seatingType === "情報室") JSeats = [...JSeats];
  // força reatividade
   }
 
   function applyAutoSeating() {
-    if(!students.length) return;
+  if (!students.length) return;
 
-    const hasAssigned = autoSeats.some(s =>s.student_id);
-    if (hasAssigned) return;
+  const hasAssigned = autoSeats.some(s => s.student_id);
+  if (hasAssigned) return;
 
-    const seatsCopy = autoSeats.map(s => ({...s}));
+  const seatsCopy = autoSeats.map(s => ({ ...s }));
 
-    const sorted = [...students].sort((a, b) => {
-      return (a.attend_no ?? 0) - (b.attend_no ?? 0);
-    });
+  const sorted = [...students].sort((a, b) => {
+    return (a.attend_no ?? 0) - (b.attend_no ?? 0);
+  });
 
-    let i = 0;
+  let i = 0;
 
-    for (let c = 1; c <= maxCols; c++) {
-      for (let r = 1; r <= maxRows; r++) {
-        const seat = seatsCopy.find(s => s.row === r && s.col === c);
-        if (!seat || !seat.active) continue;
-        if (i >= sorted.length) break;
+  // 🔥 DIREÇÃO DINÂMICA
+  const colStart = autoDirection === 'LTR' ? 1 : maxCols;
+  const colEnd   = autoDirection === 'LTR' ? maxCols : 1;
+  const colStep  = autoDirection === 'LTR' ? 1 : -1;
 
-        seat.student_id = sorted[i].id;
-        i++;
+  for (let c = colStart; autoDirection === 'LTR' ? c <= colEnd : c >= colEnd; c += colStep) {
+    for (let r = 1; r <= maxRows; r++) {
+      const seat = seatsCopy.find(s => s.row === r && s.col === c);
+      if (!seat || !seat.active) continue;
+      if (i >= sorted.length) break;
 
-      }
-    } 
-      autoSeats = [...seatsCopy];
-
-
-
+      seat.student_id = sorted[i].id;
+      i++;
+    }
   }
+
+  autoSeats = [...seatsCopy];
+}
+
+
 
   function applyASeating() {
   if(!students.length) return;
@@ -542,6 +598,39 @@ function applyCSeating() {
 
 }
 
+function applyJSeating() {
+  if (!students.length) return;
+
+  const hasAssigned = JSeats.some(s => s.student_id);
+  if (hasAssigned) return;
+
+  const seatsCopy = JSeats.map(s => ({ ...s }));
+
+  const sorted = [...students].sort((a, b) => {
+    return (a.attend_no ?? 0) - (b.attend_no ?? 0);
+  });
+
+  let i = 0;
+
+  // 🔥 DIREÇÃO DINÂMICA
+  const colStart = jouhouDirection === 'LTR' ? 1 : 5;
+  const colEnd   = jouhouDirection === 'LTR' ? 5 : 1;
+  const colStep  = jouhouDirection === 'LTR' ? 1 : -1;
+
+  for (let c = colStart; jouhouDirection === 'LTR' ? c <= colEnd : c >= colEnd; c += colStep) {
+    for (let r = 1; r <= 7; r++) {
+      const seat = seatsCopy.find(s => s.row === r && s.col === c);
+      if (!seat || !seat.active) continue;
+      if (i >= sorted.length) break;
+
+      seat.student_id = sorted[i].id;
+      i++;
+    }
+  }
+
+  JSeats = [...seatsCopy];
+}
+
 
 
 function applyRandomSeating() {
@@ -617,6 +706,22 @@ function applyRandomSeating() {
     }
   }
 
+
+  $: renderedSeats = seats.map(s => {
+  if (viewMode === 'teacher') {
+    return {
+      ...s,
+      rReal: maxRows - s.row,
+      cReal: maxCols - s.col
+    };
+  }
+  return {
+    ...s,
+    rReal: s.row - 1,
+    cReal: s.col - 1
+  };
+});
+
 </script>
 
 
@@ -686,6 +791,23 @@ function applyRandomSeating() {
         >
         C
         </button>
+
+
+        <button
+  class:selected={seatingType === '情報室'}
+  on:click={() => {
+    seatingType = '情報室';
+
+    if (isEditing) {
+      jouhouDirection = jouhouDirection === 'LTR' ? 'RTL' : 'LTR';
+      applyJSeating();
+    }
+  }}
+>
+  情報室
+</button>
+
+
 
 
       
@@ -769,8 +891,9 @@ function applyRandomSeating() {
           >
               {#each Array(maxCols) as _, c}
                   
-                  {@const rReal = viewMode === 'teacher' ? maxRows - 1 - r : r}
-                  {@const cReal = viewMode === 'teacher' ? maxCols - 1 - c : c}
+              {@const rReal = viewMode === 'teacher' ? maxRows - 1 - r : r}
+              {@const cReal = viewMode === 'teacher' ? maxCols - 1 - c : c}
+
 
                   {#key `${rReal}-${cReal}`}
                       <div
