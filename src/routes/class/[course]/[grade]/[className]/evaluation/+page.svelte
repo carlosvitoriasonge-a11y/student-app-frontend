@@ -52,7 +52,21 @@
     const res = await apiFetch(`/api/subjects?course=${course}&grade=${grade}`);
     const data = res?.json ? await res.json() : res;
 
-    subjects = sortSubjects(Array.isArray(data) ? data : []);
+    // 🔥 Filtra matérias válidas
+const filtered = (Array.isArray(data) ? data : []).filter(s =>
+  Number(s.exam_frequency) > 0 && s.type !== "optional"
+);
+
+// 🔥 Ordena só as válidas
+subjects = sortSubjects(filtered);
+
+// 🔥 Agrupa
+subjectGroups = {};
+for (const s of subjects) {
+  if (!subjectGroups[s.name]) subjectGroups[s.name] = [];
+  subjectGroups[s.name].push(s);
+}
+
 
     subjectGroups = {};
     for (const s of subjects) {
