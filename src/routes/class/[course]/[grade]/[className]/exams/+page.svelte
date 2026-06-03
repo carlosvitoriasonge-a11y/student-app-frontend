@@ -36,6 +36,9 @@
         ...s,
         id: s.id.trim()
       }));
+    
+    
+
   
     // -----------------------------
     // SUBJECTS
@@ -168,6 +171,42 @@ for (const s of subjects) {
       };
     }
 
+    async function downloadExcel(examKey) {
+  const url =
+    `/api/exams/export` +
+    `?course=${course}` +
+    `&grade=${grade}` +
+    `&class_name=${className}` +
+    `&year=${year}` +
+    `&exam_key=${examLabels[examKey]}`;
+
+  const token = localStorage.getItem("access_token"); // AJUSTAR AQUI
+
+  const res = await fetch(url, {
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    console.error("Erro ao baixar:", res.status, await res.text());
+    return;
+  }
+
+  const blob = await res.blob();
+
+  const fileUrl = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = fileUrl;
+  a.download = `${classLabel}-${examLabels[examKey]}.xlsm`;
+  a.click();
+  URL.revokeObjectURL(fileUrl);
+}
+
+
+
+console.log("STUDENTS:", students);
+
     function handleInput(e, examKey, studentId) {
     const raw = e.target.value.trim();
 
@@ -197,11 +236,16 @@ for (const s of subjects) {
     onMount(() => {
   attendanceStore.loadStudents(classId);
 
+  setTimeout(() => {
+      console.log("STUDENTS REAL:", $attendanceStore.studentsInfo);
+    }, 300);
+    
+
   const handler = (e) => {
     if (!selectedSubject) return;
 
     if (["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"].includes(e.key)) {
-      e.preventDefault(); // 🔥 impede o input de mudar o valor
+      e.preventDefault();
     } else {
       return;
     }
@@ -225,8 +269,13 @@ for (const s of subjects) {
   };
 
   window.addEventListener("keydown", handler);
-  return () => window.removeEventListener("keydown", handler);
-  });
+
+  // 🔥 ESTE return TEM QUE ESTAR AQUI DENTRO
+  return () => {
+    window.removeEventListener("keydown", handler);
+  };
+});
+
 
   
   </script>
@@ -252,6 +301,19 @@ for (const s of subjects) {
   
   {#if selectedSubject}
     <h2>{selectedSubject.name}（{selectedSubject.subject_group}）</h2>
+    <h1>試験管理</h1>
+
+    <!-- 🔥 BOTÕES DE DOWNLOAD PARA TODAS AS MATÉRIAS -->
+    <div style="margin: 16px 0; display:flex; gap:12px;">
+      <button on:click={() => downloadExcel("zenki_chukan")}>前期中間 をダウンロード</button>
+      <button on:click={() => downloadExcel("zenki_kimatsu")}>前期期末 をダウンロード</button>
+      <button on:click={() => downloadExcel("koki_chukan")}>後期中間 をダウンロード</button>
+      <button on:click={() => downloadExcel("koki_kimatsu")}>後期期末 をダウンロード</button>
+    </div>
+    
+    <button on:click={openSubjectModal}>科目を選択</button>
+    
+
   
     {#if examKeys.length === 0}
       <p>この科目には試験がありません。</p>
