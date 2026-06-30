@@ -140,7 +140,7 @@ thead {
   
       {#each subjects as s, i}
         <th class={i % 2 === 0 ? "subject-block-even-2" : "subject-block-odd-2"}>
-          {s.name}<br />
+          {s.subject_group}<br />
         </th>
         <th class={i % 2 === 0 ? "subject-block-even-2" : "subject-block-odd-2"}>
           遅刻
