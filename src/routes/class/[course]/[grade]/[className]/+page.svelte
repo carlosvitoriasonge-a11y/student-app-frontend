@@ -144,6 +144,14 @@ on:click={() => goto(`/class/${course}/${grade}/${className}/koki`)}
 >
 最終成績
 </button>
+
+<button
+  class="attendance-students-button"
+  on:click={() => goto(`/attendance_students/${course}/${grade}/${className}`)}
+>
+  科目別 出席率
+</button>
+
   
   {#if students.length === 0}
     <p>このクラスには生徒がいません。</p>
@@ -648,5 +656,22 @@ on:click={() => goto(`/class/${course}/${grade}/${className}/koki`)}
   z-index: auto;
   background: #f2f2f2;
 }
+
+.attendance-students-button {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  color: white;
+  background: #00695c; /* verde escuro elegante */
+  margin: 1rem 0;
+  margin-left: 1rem;
+}
+
+.attendance-students-button:hover {
+  background: #004d40;
+}
+
 
 </style>
