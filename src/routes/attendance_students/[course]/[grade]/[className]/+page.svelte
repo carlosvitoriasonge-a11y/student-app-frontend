@@ -108,40 +108,98 @@
     color: #e67e22;
     font-weight: bold;
   }
+  .subject-block-even {
+  background: #dce4ff;   /* azul claro forte */
+}
+
+.subject-block-odd {
+  background: #b7c6ff;   /* azul médio */
+}
+
+
+thead {
+  background: hsl(0, 0%, 82%);   /* cinza mais forte */
+  border-bottom: 3px solid #999; /* separação visual */
+}
+
+
+.subject-block-even-2 {
+  background: hsl(0, 0%, 82%);   /* cinza mais forte */
+}
+.subject-block-odd-2 {
+  background: hsl(227, 12%, 70%);   /* cinza mais forte */
+}
+
+
 </style>
 
 <table>
   <thead>
     <tr>
       <th>生徒名</th>
-      {#each subjects as s}
-        <th>{s.name}</th>
+  
+      {#each subjects as s, i}
+        <th class={i % 2 === 0 ? "subject-block-even-2" : "subject-block-odd-2"}>
+          {s.name}<br />
+        </th>
+        <th class={i % 2 === 0 ? "subject-block-even-2" : "subject-block-odd-2"}>
+          遅刻
+        </th>
+        <th class={i % 2 === 0 ? "subject-block-even-2" : "subject-block-odd-2"}>
+          怠学・居眠り
+        </th>
+        <th class={i % 2 === 0 ? "subject-block-even-2" : "subject-block-odd-2"}>
+          忘れ物
+        </th>
+        <th class={i % 2 === 0 ? "subject-block-even-2" : "subject-block-odd-2"}>
+          欠席
+        </th>
       {/each}
     </tr>
   </thead>
+  
 
   <tbody>
     {#each students as st}
       <tr>
         <td>{st.name}</td>
-
-        {#each subjects as s}
-        <td>
+  
+        {#each subjects as s, i}
           {#if summary[st.id] && summary[st.id][s.id]}
-            {#if summary[st.id][s.id].rate >= 80}
-              <span class="rate-good">{summary[st.id][s.id].rate}%</span>
-            {:else if summary[st.id][s.id].rate >= 50}
-              <span class="rate-mid">{summary[st.id][s.id].rate}%</span>
-            {:else}
-              <span class="rate-bad">{summary[st.id][s.id].rate}%</span>
-            {/if}
+            <!-- bloco da matéria: usa mesma classe em todas as 5 colunas -->
+            <td class={i % 2 === 0 ? "subject-block-even" : "subject-block-odd"}>
+              {#if summary[st.id][s.id].rate >= 80}
+                <span class="rate-good">{summary[st.id][s.id].rate}%</span>
+              {:else if summary[st.id][s.id].rate >= 50}
+                <span class="rate-mid">{summary[st.id][s.id].rate}%</span>
+              {:else}
+                <span class="rate-bad">{summary[st.id][s.id].rate}%</span>
+              {/if}
+            </td>
+  
+            <td class={i % 2 === 0 ? "subject-block-even" : "subject-block-odd"}>
+              {summary[st.id][s.id].status_counts["遅刻"]}%
+            </td>
+            <td class={i % 2 === 0 ? "subject-block-even" : "subject-block-odd"}>
+              {summary[st.id][s.id].status_counts["怠学・居眠り"]}%
+            </td>
+            <td class={i % 2 === 0 ? "subject-block-even" : "subject-block-odd"}>
+              {summary[st.id][s.id].status_counts["忘れ物"]}%
+            </td>
+            <td class={i % 2 === 0 ? "subject-block-even" : "subject-block-odd"}>
+              {summary[st.id][s.id].status_counts["欠席"]}%
+            </td>
           {:else}
-            -
+            <!-- sem registro: mesmo bloco visual -->
+            <td class={i % 2 === 0 ? "subject-block-even" : "subject-block-odd"}>-</td>
+            <td class={i % 2 === 0 ? "subject-block-even" : "subject-block-odd"}>-</td>
+            <td class={i % 2 === 0 ? "subject-block-even" : "subject-block-odd"}>-</td>
+            <td class={i % 2 === 0 ? "subject-block-even" : "subject-block-odd"}>-</td>
+            <td class={i % 2 === 0 ? "subject-block-even" : "subject-block-odd"}>-</td>
           {/if}
-        </td>
-        
         {/each}
       </tr>
     {/each}
   </tbody>
+  
 </table>
