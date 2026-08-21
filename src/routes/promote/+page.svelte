@@ -132,7 +132,8 @@
         body: JSON.stringify({
           grade,
           promote_ids,
-          password
+          password,
+          course
         })
       });
 

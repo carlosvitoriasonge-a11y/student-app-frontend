@@ -10,7 +10,7 @@
     import { tick } from "svelte";
   
     export let params;
-  
+   
     const course = params.course;
     const grade = params.grade;
     const className = params.className;

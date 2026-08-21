@@ -5,6 +5,9 @@
   import { apiFetch } from "$lib/api";
   const API_BASE = import.meta.env.VITE_API_BASE;
 
+
+  let editMode = false;
+
   let student = null;
   let loading = true;
   let error = "";
@@ -144,6 +147,7 @@
       });
 
       student = await apiFetch(`/api/students/${id}`, { cache: "no-store" });
+      window.student = student;   // ★ ADICIONE ESTA LINHA
 
       showMoushiokuriAddModal = false;
       moushiokuriText = "";
@@ -180,6 +184,7 @@
       });
 
       student = await apiFetch(`/api/students/${id}`, { cache: "no-store" });
+      window.student = student;   // ★ ADICIONE ESTA LINHA
 
       showShidouAddModal = false;
       shidouText = "";
@@ -222,6 +227,7 @@
       });
 
       student = await apiFetch(`/api/students/${id}`, { cache: "no-store" });
+      window.student = student;   // ★ ADICIONE ESTA LINHA
 
       showZemiAddModal = false;
       zemiText = "";
@@ -266,6 +272,7 @@
 
       student = await apiFetch(`/api/students/${id}`, { cache: "no-store" });
 
+      window.student = student;   // ★ ADICIONE ESTA LINHA
       showBukatsuAddModal = false;
       bukatsuText = "";
       bukatsuTeacher = "";
@@ -308,6 +315,7 @@
       });
 
       student = await apiFetch(`/api/students/${id}`, { cache: "no-store" });
+      window.student = student;   // ★ ADICIONE ESTA LINHA
 
       showYakuinAddModal = false;
       yakuinText = "";
@@ -868,14 +876,135 @@
     }
   }
 
+
   onMount(async () => {
     try {
       student = await apiFetch(`/api/students/${id}`, { cache: "no-store" });
+      window.student = student;   // ★ ADICIONE ESTA LINHA
     } catch (e) {
       error = "生徒データの取得に失敗しました";
     }
     loading = false;
   });
+
+
+  // ===============================
+// ★ HYOKA 全年度表示・編集 ★
+// ===============================
+
+let allHyoka = {};        // { subjectId: { evaluation, kanten, ... } }
+let requiredSubjects = []; // subjects required only
+
+
+let subjectsByYear = {
+  1: [],
+  2: [],
+  3: []
+};
+
+async function loadRequiredSubjectsAllYears() {
+  for (const y of [1, 2, 3]) {
+    const res = await apiFetch(`/api/subjects?course=${student.course}&grade=${y}`);
+    const subjects = res?.json ? await res.json() : res;
+    subjectsByYear[y] = subjects.filter(s => s.type === "required");
+  }
+}
+
+
+
+
+
+async function loadAllHyoka() {
+  const res = await apiFetch(`/api/evaluation/hyoka_all_years?student_id=${student.id}`);
+  const flat = res?.json ? await res.json() : res;
+
+  // HYOKA agora é direto por matéria, sem ano
+  allHyoka = flat; // { subjId: record }
+}
+
+
+
+
+// ★ 保存
+async function saveHyoka(year, subjectId, value) {
+  const subj = subjectsByYear[year].find(s => s.id === subjectId);
+
+  const current = allHyoka[subjectId];
+const existingKanten = current?.kanten ?? "";
+
+
+  const 
+  className = student.class_name_by_year?.[String(year)] ?? "不明組";
+
+  const payload = {
+    course: student.course,
+    grade: year,
+    class_name: className,   // ← CORREÇÃO AQUI
+    subject: subjectId,
+    evaluations: {
+      [student.id]: {
+        evaluation: Number(value),
+        kanten: existingKanten
+      }
+    }
+  };
+
+  await apiFetch("/api/evaluation_save_all", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+
+  await loadAllHyoka();
+}
+
+async function saveKanten(year, subjectId, kantenValue) {
+  const className =
+    year === student.grade
+      ? student.class_name
+      : (student.class_name_by_year?.[year] ?? "不明組");
+
+  const payload = {
+    course: student.course,
+    grade: year,
+    class_name: className,
+    subject: subjectId,
+    evaluations: {
+      [student.id]: {
+        evaluation: allHyoka[subjectId]?.evaluation ?? null,
+        kanten: kantenValue
+      }
+    }
+  };
+
+  await apiFetch("/api/evaluation_save_all", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+
+  await loadAllHyoka();
+}
+
+
+
+// ★ ページ読み込み後に実行
+onMount(async () => {
+  try {
+    student = await apiFetch(`/api/students/${id}`, { cache: "no-store" });
+    window.student = student;   // ★ ADICIONE ESTA LINHA
+
+    // ★ CORREÇÃO CRÍTICA ★
+  student.class_name_by_year ??= {};
+  student.class_name_by_year[student.grade] = student.class_name;
+
+
+    await loadRequiredSubjectsAllYears();
+    await loadAllHyoka();
+  } catch (e) {
+    error = "生徒データの取得に失敗しました";
+  }
+  loading = false;
+});
+
 </script>
 
 
@@ -1007,7 +1136,77 @@
         </tr>
       </tbody>
     </table>
+    <div class="left" style="margin-top: 30px;">
+      <h2>成績</h2>
+    
+      <button on:click={() => editMode = !editMode}>
+        {editMode ? "保存" : "編集"}
+      </button>
+    
+      {#each [1,2,3] as year}
+        <h3>{year}年の必履修科目</h3>
+    
+        <table class="info-table">
+          <thead>
+            <tr>
+              <th>科　目</th>
+              <th>評　価</th>
+              <th>観点別</th>
+            </tr>
+          </thead>
+    
+          <tbody>
+            {#each subjectsByYear[year].filter(s => s.subject_group !== "総合探究") as subj}
+              <tr>
+                <td>{subj.subject_group}</td>
+    
+                <!-- ★ HYOKA AGORA É allHyoka[subj.id] -->
+                <td>
+                  <select
+                    class:hidden={!editMode}
+                    value={(allHyoka[subj.id]?.evaluation ?? "-") + ""}
+                    on:change={(e) => saveHyoka(year, subj.id, e.target.value)}
+                  >
+                    <option value="-">-</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                  </select>
+    
+                  {#if !editMode}
+                    {allHyoka[subj.id]?.evaluation ?? "-"}
+                  {/if}
+                </td>
+    
+                <td>
+                  {#if editMode}
+                    <input
+                      type="text"
+                      value={allHyoka[subj.id]?.kanten ?? ""}
+                      placeholder="観点"
+                      on:change={(e) => saveKanten(year, subj.id, e.target.value)}
+                      style="width: 60px;"
+                    />
+                  {:else}
+                    {allHyoka[subj.id]?.kanten ?? "-"}
+                  {/if}
+                </td>
+    
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+    
+        <br>
+      {/each}
+    </div>
+    
+    
   </div>
+
+
 
   <div class="right">
     <div class="photo-box">
@@ -1980,6 +2179,11 @@
   overflow-y: auto;        /* ativa scroll interno */
   border-radius: 10px;
 }
+
+.hidden {
+  display: none;
+}
+
 
 .guidance-item,
 .note-item {

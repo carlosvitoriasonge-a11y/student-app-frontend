@@ -109,12 +109,14 @@ for (const s of subjects) {
       const hy = hyoka[st.id] || {};
 
       const auto = cont.continuous?.five_scale ?? null;
-      const saved = hy[subjectId]?.evaluation ?? null;
+      const saved = hy[subjectId]?.evaluation;
+
 
       evaluation[st.id] = {
         ...cont,
         kanten_correct: cont.continuous?.kanten ?? null,
-        final_grade: saved != null ? String(saved) : (auto != null ? String(auto) : "")
+        final_grade: saved !== undefined ? String(saved) : (auto != null ? String(auto) : "")
+
       };
     }
   }
