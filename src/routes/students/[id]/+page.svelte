@@ -928,8 +928,9 @@ async function loadAllHyoka() {
 // ★ 保存
 async function saveHyoka(year, subjectId, value) {
   const subj = subjectsByYear[year].find(s => s.id === subjectId);
+if (!subj) return; // ← CORREÇÃO CRÍTICA
+const current = allHyoka[subj.id];
 
-  const current = allHyoka[subjectId];
 const existingKanten = current?.kanten ?? "";
 
 
@@ -1165,45 +1166,46 @@ if (student.grade && student.class_name) {
     
           <tbody>
             {#each subjectsByYear[year].filter(s => s.subject_group !== "総合探究") as subj}
-              <tr>
-                <td>{subj.subject_group}</td>
-    
-                <!-- ★ HYOKA AGORA É allHyoka[subj.id] -->
-                <td>
-                  <select
-                    class:hidden={!editMode}
-                    value={(allHyoka[subj.id]?.evaluation ?? "-") + ""}
-                    on:change={(e) => saveHyoka(year, subj.id, e.target.value)}
-                  >
-                    <option value="-">-</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                  </select>
-    
-                  {#if !editMode}
-                    {allHyoka[subj.id]?.evaluation ?? "-"}
-                  {/if}
-                </td>
-    
-                <td>
-                  {#if editMode}
-                    <input
-                      type="text"
-                      value={allHyoka[subj.id]?.kanten ?? ""}
-                      placeholder="観点"
-                      on:change={(e) => saveKanten(year, subj.id, e.target.value)}
-                      style="width: 60px;"
-                    />
-                  {:else}
-                    {allHyoka[subj.id]?.kanten ?? "-"}
-                  {/if}
-                </td>
-    
-              </tr>
-            {/each}
+  {#if subj}
+    <tr>
+      <td>{subj.subject_group}</td>
+
+      <td>
+        <select
+          class:hidden={!editMode}
+          value={(allHyoka[subj.id]?.evaluation ?? "-") + ""}
+          on:change={(e) => saveHyoka(year, subj.id, e.target.value)}
+        >
+          <option value="-">-</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+
+        {#if !editMode}
+          {allHyoka[subj.id]?.evaluation ?? "-"}
+        {/if}
+      </td>
+
+      <td>
+        {#if editMode}
+          <input
+            type="text"
+            value={allHyoka[subj.id]?.kanten ?? ""}
+            placeholder="観点"
+            on:change={(e) => saveKanten(year, subj.id, e.target.value)}
+            style="width: 60px;"
+          />
+        {:else}
+          {allHyoka[subj.id]?.kanten ?? "-"}
+        {/if}
+      </td>
+    </tr>
+  {/if}
+{/each}
+
           </tbody>
         </table>
     
