@@ -993,8 +993,16 @@ onMount(async () => {
     window.student = student;   // ★ ADICIONE ESTA LINHA
 
     // ★ CORREÇÃO CRÍTICA ★
-  student.class_name_by_year ??= {};
-  student.class_name_by_year[student.grade] = student.class_name;
+  // garante que existe
+if (!student.class_name_by_year || typeof student.class_name_by_year !== "object") {
+  student.class_name_by_year = {};
+}
+
+// só adiciona se grade e class_name existirem
+if (student.grade && student.class_name) {
+  student.class_name_by_year[String(student.grade)] = student.class_name;
+}
+
 
 
     await loadRequiredSubjectsAllYears();
