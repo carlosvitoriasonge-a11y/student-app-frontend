@@ -6,6 +6,11 @@
   const API_BASE = import.meta.env.VITE_API_BASE;
 
 
+  window.onerror = function (msg, url, line, col, error) {
+  console.log("🔥 FRONTEND ERROR:", msg, url, line, col, error);
+};
+
+
   let editMode = false;
 
   let student = null;

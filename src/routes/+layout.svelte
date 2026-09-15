@@ -281,10 +281,7 @@ async function changeClass(url) {
     </section>
   </div>
 
-  <div class="fullscreen-fab" on:click={toggleFullscreen}>
-    ⛶
-  </div>
-  
+
 </div>
 
 <style>
