@@ -9,6 +9,10 @@
   let calConfigured = false;
   let calLoaded = false;
 
+  let tmrEvents = [];
+  let tmrConfigured = false;
+  let tmrLoaded = false;
+
   let missing = {};
   let hasMissing = false;
 
@@ -37,6 +41,18 @@
       calLoaded = true;
     }
   });
+
+  onMount(async () => {
+    try {
+      const data = await apiFetch("/api/calendar/tomorrow");
+      tmrConfigured = !!data?.configured;
+      tmrEvents = data?.events || [];
+    } catch (e) {
+      console.error("Erro ao carregar eventos de amanhã:", e);
+    } finally {
+      tmrLoaded = true;
+    }
+  });
 </script>
 
 
@@ -53,6 +69,28 @@
     {:else}
       <ul style="list-style:none; padding-left:0; margin-bottom:0;">
         {#each calEvents as ev}
+          <li style="padding:4px 0; border-bottom:1px solid #eee;">
+            {#if ev.all_day}
+              <span style="color:#666;">終日</span>
+            {:else}
+              <span style="color:#666;">{ev.start_time}〜{ev.end_time}</span>
+            {/if}
+            {ev.title}
+          </li>
+        {/each}
+      </ul>
+    {/if}
+  </div>
+{/if}
+
+{#if tmrLoaded && tmrConfigured}
+  <div style="margin-top:15px; border:1px solid #ccc; border-radius:8px; padding:15px; max-width:640px;">
+    <h2 style="margin-top:0;">📅 明日の行事</h2>
+    {#if tmrEvents.length === 0}
+      <p>明日の行事はありません。</p>
+    {:else}
+      <ul style="list-style:none; padding-left:0; margin-bottom:0;">
+        {#each tmrEvents as ev}
           <li style="padding:4px 0; border-bottom:1px solid #eee;">
             {#if ev.all_day}
               <span style="color:#666;">終日</span>
@@ -104,8 +142,6 @@
     {/each}
   {/each}
 {/if}
-
-
 
 
 
