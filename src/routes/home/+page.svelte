@@ -5,10 +5,9 @@
   let today = new Date();
   let month = today.getMonth() + 1;
 
-  let events = [];
-  let googleToken = localStorage.getItem("google_access_token");
-
-  const GOOGLE_CLIENT_ID = "404733269225-o1lmoqrgk3nnlkh6oedarn8eh9opvuiv.apps.googleusercontent.com";
+  let calEvents = [];
+  let calConfigured = false;
+  let calLoaded = false;
 
   let missing = {};
   let hasMissing = false;
@@ -26,6 +25,18 @@
       console.error("Erro ao carregar alunos sem foto:", e);
     }
   });
+
+  onMount(async () => {
+    try {
+      const data = await apiFetch("/api/calendar/today");
+      calConfigured = !!data?.configured;
+      calEvents = data?.events || [];
+    } catch (e) {
+      console.error("Erro ao carregar eventos de hoje:", e);
+    } finally {
+      calLoaded = true;
+    }
+  });
 </script>
 
 
@@ -33,6 +44,28 @@
 
 <p>英心高校教務管理システムへようこそ。左側のメニューから操作を選択してください。</p>
 <p>☆使用後は必ずログアウトをしてください。☆</p>
+
+{#if calLoaded && calConfigured}
+  <div style="margin-top:25px; border:1px solid #ccc; border-radius:8px; padding:15px; max-width:640px;">
+    <h2 style="margin-top:0;">📅 本日の行事</h2>
+    {#if calEvents.length === 0}
+      <p>本日の行事はありません。</p>
+    {:else}
+      <ul style="list-style:none; padding-left:0; margin-bottom:0;">
+        {#each calEvents as ev}
+          <li style="padding:4px 0; border-bottom:1px solid #eee;">
+            {#if ev.all_day}
+              <span style="color:#666;">終日</span>
+            {:else}
+              <span style="color:#666;">{ev.start_time}〜{ev.end_time}</span>
+            {/if}
+            {ev.title}
+          </li>
+        {/each}
+      </ul>
+    {/if}
+  </div>
+{/if}
 
 
 {#if month === 9}
