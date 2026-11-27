@@ -8,10 +8,12 @@
   let calEvents = [];
   let calConfigured = false;
   let calLoaded = false;
+  let calError = false;
 
   let tmrEvents = [];
   let tmrConfigured = false;
   let tmrLoaded = false;
+  let tmrError = false;
 
   let missing = {};
   let hasMissing = false;
@@ -30,13 +32,32 @@
     }
   });
 
+  // Busca os eventos com novas tentativas: uma falha momentânea de
+  // conexão não pode fazer o cartão sumir da tela inicial.
+  async function fetchCalendar(path) {
+    let lastErr = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const data = await apiFetch(path);
+        if (data && !data.error) return data;
+        lastErr = new Error(data?.error || "resposta vazia");
+      } catch (e) {
+        lastErr = e;
+      }
+      if (attempt < 2) await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+    }
+    throw lastErr;
+  }
+
   onMount(async () => {
     try {
-      const data = await apiFetch("/api/calendar/today");
+      const data = await fetchCalendar("/api/calendar/today");
       calConfigured = !!data?.configured;
       calEvents = data?.events || [];
     } catch (e) {
       console.error("Erro ao carregar eventos de hoje:", e);
+      calError = true;
+      calConfigured = true; // mostra o cartão com o aviso, em vez de sumir
     } finally {
       calLoaded = true;
     }
@@ -44,11 +65,13 @@
 
   onMount(async () => {
     try {
-      const data = await apiFetch("/api/calendar/tomorrow");
+      const data = await fetchCalendar("/api/calendar/tomorrow");
       tmrConfigured = !!data?.configured;
       tmrEvents = data?.events || [];
     } catch (e) {
       console.error("Erro ao carregar eventos de amanhã:", e);
+      tmrError = true;
+      tmrConfigured = true; // mostra o cartão com o aviso, em vez de sumir
     } finally {
       tmrLoaded = true;
     }
@@ -64,7 +87,9 @@
 {#if calLoaded && calConfigured}
   <div style="margin-top:25px; border:1px solid #ccc; border-radius:8px; padding:15px; max-width:640px;">
     <h2 style="margin-top:0;">📅 本日の行事</h2>
-    {#if calEvents.length === 0}
+    {#if calError}
+      <p style="color:#b00;">行事を読み込めませんでした。ページを再読み込みしてください。</p>
+    {:else if calEvents.length === 0}
       <p>本日の行事はありません。</p>
     {:else}
       <ul style="list-style:none; padding-left:0; margin-bottom:0;">
@@ -86,7 +111,9 @@
 {#if tmrLoaded && tmrConfigured}
   <div style="margin-top:15px; border:1px solid #ccc; border-radius:8px; padding:15px; max-width:640px;">
     <h2 style="margin-top:0;">📅 明日の行事</h2>
-    {#if tmrEvents.length === 0}
+    {#if tmrError}
+      <p style="color:#b00;">行事を読み込めませんでした。ページを再読み込みしてください。</p>
+    {:else if tmrEvents.length === 0}
       <p>明日の行事はありません。</p>
     {:else}
       <ul style="list-style:none; padding-left:0; margin-bottom:0;">
